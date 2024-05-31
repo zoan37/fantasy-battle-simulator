@@ -11,6 +11,8 @@ fal.config({
 
 export default function Home() {
   const [imageUrl, setImageUrl] = useState('');
+  const [enemyName, setEnemyName] = useState('');
+  const [enemyDescription, setEnemyDescription] = useState('');
 
   type ResultType = {
     images: [
@@ -24,10 +26,72 @@ export default function Home() {
 
   console.log(process.env.NEXT_PUBLIC_FAL_AI_KEY);
 
-  const fetchImage = async () => {
-    const result : ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
+  const OPENROUTER_API_KEY = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+  const YOUR_SITE_URL = "";
+  const YOUR_SITE_NAME = "Fantasy Battle Simulator";
+
+  const fetchOpenRouterResponse = async () => {
+    try {
+      const prompt = "Generate a random enemy in a fantasy world. Provide 'Name:' and 'Description:' on separate lines.";
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": YOUR_SITE_URL,
+          "X-Title": YOUR_SITE_NAME,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "model": "openai/gpt-3.5-turbo",
+          "messages": [
+            { "role": "user", "content": prompt }
+          ],
+          "temperature": 1.0
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      // Accessing the message content from the response data
+      const messageContent = data.choices[0].message.content;
+      console.log("Received message:", messageContent);
+
+      // Parsing the name from the message content
+      const nameMatch = messageContent.match(/^\s*Name:\s*(.+)$/m);
+      if (!nameMatch) {
+        throw new Error("Name not found in the message content.");
+      }
+      const name = nameMatch[1].trim();
+      console.log("Parsed Name:", name);
+      setEnemyName(name);
+
+      // Parsing the description from the message content
+      const descriptionMatch = messageContent.match(/Description:\s*(.+)/s);
+      if (!descriptionMatch) {
+        throw new Error("Description not found in the message content.");
+      }
+      const description = descriptionMatch[1].trim();
+      console.log("Parsed Description:", description);
+      setEnemyDescription(description);
+
+      // Call fetchImage with the parsed description
+      fetchImage(name + '. ' + description);
+
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch from OpenRouter:", error);
+    }
+  };
+
+  const fetchImage = async (descriptionPrompt: string) => {
+    const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
       input: {
-        prompt: "wraith knight"
+        prompt: descriptionPrompt
       },
       logs: true,
       onQueueUpdate: (status: fal.QueueStatus) => {
@@ -46,9 +110,10 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <button onClick={fetchImage} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Load Image
+      <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Ask OpenRouter
       </button>
+
       {imageUrl && (
         <Image
           src={imageUrl}
@@ -57,6 +122,18 @@ export default function Home() {
           height={300}
           priority
         />
+      )}
+
+      {enemyName && (
+        <div className="text-lg font-bold mt-4">
+          Enemy Name: {enemyName}
+        </div>
+      )}
+
+      {enemyDescription && (
+        <div className="text-md mt-2">
+          Description: {enemyDescription}
+        </div>
       )}
 
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
