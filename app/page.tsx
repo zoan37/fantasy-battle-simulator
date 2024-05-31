@@ -43,6 +43,9 @@ export default function Home() {
         },
         body: JSON.stringify({
           "model": "openai/gpt-3.5-turbo",
+          // "model": "openai/gpt-4-turbo",
+          // "model": "anthropic/claude-3-opus",
+          // "model": "meta-llama/llama-3-70b-instruct",
           "messages": [
             { "role": "user", "content": prompt }
           ],
@@ -80,7 +83,7 @@ export default function Home() {
       setEnemyDescription(description);
 
       // Call fetchImage with name + description
-      fetchImage(name + '. ' + description);
+      fetchImage(name + ': ' + description);
 
       return data;
     } catch (error) {
@@ -92,7 +95,7 @@ export default function Home() {
     const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
       input: {
         prompt: descriptionPrompt,
-        negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, malformed limbs, duplicate. signature, watermark. cartoon, illustration, animation."
+        negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, malformed limbs. duplicates. signature, watermark. cartoon, illustration, animation."
       },
       logs: true,
       onQueueUpdate: (status: fal.QueueStatus) => {
