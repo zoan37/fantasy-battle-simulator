@@ -32,7 +32,7 @@ export default function Home() {
 
   const fetchOpenRouterResponse = async () => {
     try {
-      const prompt = "Generate a random enemy in a fantasy world. Provide 'Name:' and 'Description:' on separate lines.";
+      const prompt = "Generate a random enemy in a fantasy world. No spiders as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
