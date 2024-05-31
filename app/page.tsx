@@ -79,7 +79,7 @@ export default function Home() {
       console.log("Parsed Description:", description);
       setEnemyDescription(description);
 
-      // Call fetchImage with the parsed description
+      // Call fetchImage with name + description
       fetchImage(name + '. ' + description);
 
       return data;
@@ -91,7 +91,8 @@ export default function Home() {
   const fetchImage = async (descriptionPrompt: string) => {
     const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
       input: {
-        prompt: descriptionPrompt
+        prompt: descriptionPrompt,
+        negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, malformed limbs, duplicate. signature, watermark. cartoon, illustration, animation."
       },
       logs: true,
       onQueueUpdate: (status: fal.QueueStatus) => {
@@ -126,13 +127,13 @@ export default function Home() {
 
       {enemyName && (
         <div className="text-lg font-bold mt-4">
-          Enemy Name: {enemyName}
+          {enemyName}
         </div>
       )}
 
       {enemyDescription && (
         <div className="text-md mt-2">
-          Description: {enemyDescription}
+          {enemyDescription}
         </div>
       )}
 
