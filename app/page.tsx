@@ -13,6 +13,25 @@ export default function Home() {
   const [imageUrl, setImageUrl] = useState('');
   const [enemyName, setEnemyName] = useState('');
   const [enemyDescription, setEnemyDescription] = useState('');
+  const [userInput, setUserInput] = useState(''); // State to hold user input
+
+  // Function to handle input changes
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(event.target.value);
+  };
+
+  // Function to handle form submission
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    generateCustomEnemy(userInput); // Call the asdf function with user input
+  };
+
+  // Example asdf function
+  const generateCustomEnemy = (input: string) => {
+    console.log("Function generateCustomEnemy called with input:", input);
+    // You can add more logic here to process the input
+    fetchOpenRouterResponseWithInput(input);
+  };
 
   type ResultType = {
     images: [
@@ -30,6 +49,62 @@ export default function Home() {
   const YOUR_SITE_URL = "";
   const YOUR_SITE_NAME = "Fantasy Battle Simulator";
 
+  const parseResponseContent = (messageContent: string) => {
+    const nameMatch = messageContent.match(/^\s*Name:\s*(.+)$/m);
+    if (!nameMatch) {
+      throw new Error("Name not found in the message content.");
+    }
+    const name = nameMatch[1].trim();
+
+    const descriptionMatch = messageContent.match(/Description:\s*(.+)/s);
+    if (!descriptionMatch) {
+      throw new Error("Description not found in the message content.");
+    }
+    const description = descriptionMatch[1].trim();
+
+    return { name, description };
+  };
+
+  const fetchOpenRouterResponseWithInput = async (input: string) => {
+    try {
+      const userDescription = input.trim();
+      const prompt = "Given the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. Here is the user description:\n" + userDescription;
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": YOUR_SITE_URL,
+          "X-Title": YOUR_SITE_NAME,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "model": "openai/gpt-3.5-turbo",
+          "messages": [{ "role": "user", "content": prompt }],
+          "temperature": 1.0
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const messageContent = data.choices[0].message.content;
+
+      const { name, description } = parseResponseContent(messageContent);
+      // log the name and description
+      console.log("Name:", name);
+      console.log("Description:", description);
+      setEnemyName(name);
+      setEnemyDescription(description);
+      fetchImage(name + ': ' + description);
+
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch from OpenRouter:", error);
+    }
+  };
+
   const fetchOpenRouterResponse = async () => {
     try {
       const prompt = "Generate a random enemy in a fantasy world. No spiders as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
@@ -43,12 +118,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           "model": "openai/gpt-3.5-turbo",
-          // "model": "openai/gpt-4-turbo",
-          // "model": "anthropic/claude-3-opus",
-          // "model": "meta-llama/llama-3-70b-instruct",
-          "messages": [
-            { "role": "user", "content": prompt }
-          ],
+          "messages": [{ "role": "user", "content": prompt }],
           "temperature": 1.0
         })
       });
@@ -58,31 +128,14 @@ export default function Home() {
       }
 
       const data = await response.json();
-      console.log(data);
-
-      // Accessing the message content from the response data
       const messageContent = data.choices[0].message.content;
-      console.log("Received message:", messageContent);
 
-      // Parsing the name from the message content
-      const nameMatch = messageContent.match(/^\s*Name:\s*(.+)$/m);
-      if (!nameMatch) {
-        throw new Error("Name not found in the message content.");
-      }
-      const name = nameMatch[1].trim();
-      console.log("Parsed Name:", name);
+      const { name, description } = parseResponseContent(messageContent);
+      // log the name and description
+      console.log("Name:", name);
+      console.log("Description:", description);
       setEnemyName(name);
-
-      // Parsing the description from the message content
-      const descriptionMatch = messageContent.match(/Description:\s*(.+)/s);
-      if (!descriptionMatch) {
-        throw new Error("Description not found in the message content.");
-      }
-      const description = descriptionMatch[1].trim();
-      console.log("Parsed Description:", description);
       setEnemyDescription(description);
-
-      // Call fetchImage with name + description
       fetchImage(name + ': ' + description);
 
       return data;
@@ -114,8 +167,21 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <form onSubmit={handleFormSubmit} className="mb-4">
+        <input
+          type="text"
+          value={userInput}
+          onChange={handleInputChange}
+          placeholder="Describe an enemy..."
+          className="text-black p-2 rounded"
+        />
+        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Battle!
+        </button>
+      </form>
+
       <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Ask OpenRouter
+        Battle Random Enemy
       </button>
 
       {imageUrl && (
