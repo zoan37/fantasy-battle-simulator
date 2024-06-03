@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image";
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as fal from "@fal-ai/serverless-client";
 import Markdown from 'react-markdown';
 
@@ -24,6 +24,14 @@ export default function Home() {
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
   const [streamContent, setStreamContent] = useState(''); // State to hold stream content
 
+  const streamContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (streamContentRef.current) {
+      streamContentRef.current.scrollTop = streamContentRef.current.scrollHeight;
+    }
+  }, [streamContent]); // Dependency on streamContent to trigger scroll on update
+
   // Function to handle user action input changes
   const handleActionInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserAction(event.target.value);
@@ -35,6 +43,12 @@ export default function Home() {
     console.log("User action submitted:", userAction);
     // Call handleBattleTurnChatResponse with the user's action
     handleBattleTurnChatResponse(userAction);
+  };
+
+  // Function to handle specific action button clicks
+  const handleActionButtonClick = (e: React.MouseEvent<HTMLButtonElement>, action: string) => {
+    e.preventDefault(); // Prevent default button click behavior
+    handleBattleTurnChatResponse(action); // Then submit the form
   };
 
   // start battle function
@@ -61,6 +75,8 @@ Simulate a battle between me and and the following opponent: ${enemyName}. ${ene
 Don't show the HP of me/opponent. Echo should recommend three actions to take: 1, 2, and 3. Give name and brief description of each action. The format should be like: **1. "Action 1":** Description of Action 1.
 
 Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
+
+Additionally, when the battle ends, add a tag at the end that says "<EOB>". This won't be show to the user, but will be used to know when the battle is over.
     `.trim();
 
     // example messages with Message
@@ -278,7 +294,7 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
     const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
       input: {
         prompt: descriptionPrompt,
-        negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, malformed limbs. duplicates. signature, watermark. cartoon, illustration, animation."
+        negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, duplicates. signature, watermark. cartoon, illustration, animation."
       },
       logs: true,
       onQueueUpdate: (status: fal.QueueStatus) => {
@@ -442,11 +458,27 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
         </div>
       )}
 
-      <div className="text-md mt-4 whitespace-pre-wrap">
+      <div
+        ref={streamContentRef}
+        className="text-md mt-4 whitespace-pre-wrap overflow-auto"
+        style={{ maxHeight: '500px', border: '1px solid #ccc', padding: '15px' }}
+      >
         <Markdown>{streamContent}</Markdown>
       </div>
 
       <form onSubmit={handleActionSubmit} className="mb-4">
+        <div className="flex justify-center mt-2 mb-2">
+          <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+            1
+          </button>
+          <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+            2
+          </button>
+          <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+            3
+          </button>
+        </div>
+
         <input
           type="text"
           value={userAction}
@@ -454,10 +486,12 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
           placeholder="Custom action..."
           className="text-black p-2 rounded"
         />
+
         <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Execute Action
+          Go
         </button>
       </form>
     </main>
   );
 }
+
