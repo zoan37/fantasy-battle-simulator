@@ -20,15 +20,43 @@ export default function Home() {
   const [enemyName, setEnemyName] = useState('');
   const [enemyDescription, setEnemyDescription] = useState('');
   const [userInput, setUserInput] = useState(''); // State to hold user input
+  const [userAction, setUserAction] = useState(''); // State to hold user's action input
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
   const [streamContent, setStreamContent] = useState(''); // State to hold stream content
 
+  // Function to handle user action input changes
+  const handleActionInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUserAction(event.target.value);
+  };
+
+  // Function to handle action submission and execute new battle turn
+  const handleActionSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    console.log("User action submitted:", userAction);
+    // Call handleBattleTurnChatResponse with the user's action
+    handleBattleTurnChatResponse(userAction);
+  };
+
+  // start battle function
+  const startBattle = async (enemyName: string, enemyDescription: string) => {
+    // trim the enemyName and enemyDescription
+    enemyName = enemyName.trim();
+    enemyDescription = enemyDescription.trim();
+
+    // log battle
+    console.log('startBattle');
+    console.log(enemyName);
+    console.log(enemyDescription);
+
+    handleStartBattleChatResponse(enemyName, enemyDescription);
+  };
+
   // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
-  const handleChatResponse = async () => {
+  const handleStartBattleChatResponse = async (enemyName: string, enemyDescription: string) => {
     const battlePrompt = `
 I'm the Hero in a fantasy world. I have an overpowered magic system called Echo that assists me; it has a vast knowledge of spells, and can analyze and counter any enemy.
 
-Simulate a battle between me and and the following opponent: Gloomfang Wraith. A spectral figure shrouded in dark mist, the Gloomfang Wraith is a malevolent entity that feeds off the fear and despair of its victims. Its eerie wail can chill the bravest of hearts, leaving them paralyzed with terror as it closes in for the kill with its sharp claws that seem to drip with shadows. Beware, for those who cross paths with the Gloomfang Wraith may find themselves trapped in a nightmare from which there is no escape.
+Simulate a battle between me and and the following opponent: ${enemyName}. ${enemyDescription}
 
 Don't show the HP of me/opponent. Echo should recommend three actions to take: 1, 2, and 3. Give name and brief description of each action. The format should be like: **1. "Action 1":** Description of Action 1.
 
@@ -54,21 +82,65 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
           break;
         }
         bufferContent += value;
-        console.log(bufferContent);
+        // console.log(bufferContent);
         // Update the state with new content, appending it to existing content
         setStreamContent(prevContent => prevContent + value);
       }
     };
 
-    readStream(); // Start reading the stream
+    await readStream(); // Start reading the stream
+
+    // add bufferContent to messages
+    messages.push({ role: "assistant", content: bufferContent });
+
+    // set messageHistory to messages
+    setMessageHistory(messages);
+  };
+
+  // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
+  const handleBattleTurnChatResponse = async (action: string) => {
+
+    // clone message history
+    const messages = [...messageHistory];
+
+    // add action to the end of the messages
+    messages.push({ role: "user", content: action });
+
+    // log messages
+    console.log('messages');
+    console.log(messages);
+
+    const responseStream = await getChatResponseStream(messages);
+    const reader = responseStream.getReader();
+
+    let bufferContent = '';
+    // Function to read the stream using a while loop
+    const readStream = async () => {
+      let done = false;
+      while (!done) {
+        const { done: readDone, value } = await reader.read();
+        done = readDone;
+        if (done) {
+          console.log("Stream finished.");
+          break;
+        }
+        bufferContent += value;
+        // console.log(bufferContent);
+        // Update the state with new content, appending it to existing content
+        setStreamContent(prevContent => prevContent + value);
+      }
+    };
+
+    await readStream(); // Start reading the stream
 
     console.log('bufferContent');
     console.log(bufferContent);
 
-    // log the streamContent
-    setTimeout(() => {
-      console.log(streamContent);
-    }, 100);
+    // add bufferContent to messages
+    messages.push({ role: "assistant", content: bufferContent });
+
+    // set messageHistory to messages
+    setMessageHistory(messages);
   };
 
   // Function to handle input changes
@@ -153,6 +225,8 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
       setEnemyDescription(description);
       fetchImage(name + ': ' + description);
 
+      startBattle(name, description);
+
       return data;
     } catch (error) {
       console.error("Failed to fetch from OpenRouter:", error);
@@ -191,6 +265,8 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
       setEnemyName(name);
       setEnemyDescription(description);
       fetchImage(name + ': ' + description);
+
+      startBattle(name, description);
 
       return data;
     } catch (error) {
@@ -340,7 +416,7 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
         Battle Random Enemy
       </button>
 
-      <button onClick={handleChatResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      <button onClick={handleStartBattleChatResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Test
       </button>
 
@@ -369,6 +445,19 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
       <div className="text-md mt-4 whitespace-pre-wrap">
         <Markdown>{streamContent}</Markdown>
       </div>
+
+      <form onSubmit={handleActionSubmit} className="mb-4">
+        <input
+          type="text"
+          value={userAction}
+          onChange={handleActionInputChange}
+          placeholder="Custom action..."
+          className="text-black p-2 rounded"
+        />
+        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Execute Action
+        </button>
+      </form>
     </main>
   );
 }
