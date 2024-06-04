@@ -53,6 +53,10 @@ export default function Home() {
 
   // start battle function
   const startBattle = async (enemyName: string, enemyDescription: string) => {
+    // clear message history and stream content
+    setMessageHistory([]);
+    setStreamContent('');
+
     // trim the enemyName and enemyDescription
     enemyName = enemyName.trim();
     enemyDescription = enemyDescription.trim();
@@ -74,9 +78,9 @@ Simulate a battle between me and and the following opponent: ${enemyName}. ${ene
 
 Don't show the HP of me/opponent. Echo should recommend three actions to take: 1, 2, and 3. Give name and brief description of each action. The format should be like: **1. "Action 1":** Description of Action 1.
 
-Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
+Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. I'm allowed to choose a custom action as well, in addition to actions, 1, 2, and 3. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
 
-Additionally, when the battle ends, add a tag at the end that says "<EOB>". This won't be show to the user, but will be used to know when the battle is over.
+Additionally, at the end of your response, include a new line with the tag "<BattleInProgress>" or "<BattleOver>" to indicate if the battle is in progress (enemy not defeated, still actions for user to take) or if the battle is over (enemy defeated, no actions for user to take).
     `.trim();
 
     // example messages with Message
@@ -97,10 +101,16 @@ Additionally, when the battle ends, add a tag at the end that says "<EOB>". This
           console.log("Stream finished.");
           break;
         }
-        bufferContent += value;
+
+        let newValue = value;
+        // TODO: if new line or whitespace characters, wait for more values to add,
+        // to detect <BattleInProgress> or <BattleOver> tags. If not detected and stream ends,
+        // make sure to append the values remaining.
+
+        bufferContent += newValue;
         // console.log(bufferContent);
         // Update the state with new content, appending it to existing content
-        setStreamContent(prevContent => prevContent + value);
+        setStreamContent(prevContent => prevContent + newValue);
       }
     };
 
@@ -115,6 +125,10 @@ Additionally, when the battle ends, add a tag at the end that says "<EOB>". This
 
   // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
   const handleBattleTurnChatResponse = async (action: string) => {
+    // trim action
+    action = action.trim();
+
+    setStreamContent(prevContent => prevContent + `\n\n---\n*Executing action: ${action}*\n\n---\n\n`);
 
     // clone message history
     const messages = [...messageHistory];
@@ -421,7 +435,7 @@ Additionally, when the battle ends, add a tag at the end that says "<EOB>". This
           value={userInput}
           onChange={handleInputChange}
           placeholder="Describe an enemy..."
-          className="text-black p-2 rounded"
+          className="text-black p-2 rounded border border-gray-300 mr-1"
         />
         <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
           Battle!
@@ -430,10 +444,6 @@ Additionally, when the battle ends, add a tag at the end that says "<EOB>". This
 
       <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Battle Random Enemy
-      </button>
-
-      <button onClick={handleStartBattleChatResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Test
       </button>
 
       {imageUrl && (
@@ -484,7 +494,7 @@ Additionally, when the battle ends, add a tag at the end that says "<EOB>". This
           value={userAction}
           onChange={handleActionInputChange}
           placeholder="Custom action..."
-          className="text-black p-2 rounded"
+          className="text-black p-2 rounded border border-gray-300 mr-1"
         />
 
         <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
