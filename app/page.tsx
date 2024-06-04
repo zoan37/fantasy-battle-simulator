@@ -16,6 +16,7 @@ type Message = {
 };
 
 export default function Home() {
+  const [isVisible, setIsVisible] = useState(false); // State to control visibility of battle elements
   const [imageUrl, setImageUrl] = useState('');
   const [enemyName, setEnemyName] = useState('');
   const [enemyDescription, setEnemyDescription] = useState('');
@@ -25,12 +26,47 @@ export default function Home() {
   const [streamContent, setStreamContent] = useState(''); // State to hold stream content
 
   const streamContentRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null); // Ref for the audio element
+  const [volume, setVolume] = useState(1); // Volume state
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      const fadeOutDuration = 3; // seconds
+      const checkInterval = 250; // milliseconds
+
+      const intervalId = setInterval(() => {
+        if (audio.duration - audio.currentTime <= fadeOutDuration) {
+          const newVolume = (audio.duration - audio.currentTime) / fadeOutDuration;
+          setVolume(newVolume);
+        } else {
+          setVolume(1);
+        }
+      }, checkInterval);
+
+      return () => clearInterval(intervalId);
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   useEffect(() => {
     if (streamContentRef.current) {
       streamContentRef.current.scrollTop = streamContentRef.current.scrollHeight;
     }
   }, [streamContent]); // Dependency on streamContent to trigger scroll on update
+
+  const handleStartClick = () => {
+    setIsVisible(true); // Set visibility to true when start button is clicked
+
+    if (audioRef.current) {
+      audioRef.current.play(); // Play the audio when the start button is clicked
+    }
+  };
 
   // Function to handle user action input changes
   const handleActionInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -426,81 +462,94 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex flex-col items-center p-5">
       <h1 className="text-3xl font-bold text-center mb-8">Fantasy Battle Simulator</h1>
-      <p className="text-center text-lg mb-4">You are the Hero, blessed with an overpowered magic system called Echo, in a fantasy world. Battle enemies to your heart's content!</p>
-      <form onSubmit={handleFormSubmit} className="mb-4">
-        <input
-          type="text"
-          value={userInput}
-          onChange={handleInputChange}
-          placeholder="Describe an enemy..."
-          className="text-black p-2 rounded border border-gray-300 mr-1"
-        />
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Battle!
-        </button>
-      </form>
 
-      <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Battle Random Enemy
+      <audio controls ref={audioRef} src="https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3" loop>
+        Your browser does not support the audio element.
+      </audio>
+
+      <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4">
+        Start Battle
       </button>
 
-      {imageUrl && (
-        <Image
-          src={imageUrl}
-          alt="Dynamic Image"
-          width={500}
-          height={300}
-          priority
-        />
-      )}
+      {isVisible && (
+        <>
+          <p className="text-center text-lg mb-4">You are the Hero, blessed with an overpowered magic system called Echo, in a fantasy world. Battle enemies to your heart's content!</p>
+          <form onSubmit={handleFormSubmit} className="mb-4">
+            <input
+              type="text"
+              value={userInput}
+              onChange={handleInputChange}
+              placeholder="Describe an enemy..."
+              className="text-black p-2 rounded border border-gray-300 mr-1"
+            />
+            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              Battle!
+            </button>
+          </form>
 
-      {enemyName && (
-        <div className="text-lg font-bold mt-4">
-          {enemyName}
-        </div>
-      )}
-
-      {enemyDescription && (
-        <div className="text-md mt-2">
-          {enemyDescription}
-        </div>
-      )}
-
-      <div
-        ref={streamContentRef}
-        className="text-md mt-4 whitespace-pre-wrap overflow-auto"
-        style={{ maxHeight: '500px', border: '1px solid #ccc', padding: '15px' }}
-      >
-        <Markdown>{streamContent}</Markdown>
-      </div>
-
-      <form onSubmit={handleActionSubmit} className="mb-4">
-        <div className="flex justify-center mt-2 mb-2">
-          <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
-            1
+          <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Battle Random Enemy
           </button>
-          <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
-            2
-          </button>
-          <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
-            3
-          </button>
-        </div>
 
-        <input
-          type="text"
-          value={userAction}
-          onChange={handleActionInputChange}
-          placeholder="Custom action..."
-          className="text-black p-2 rounded border border-gray-300 mr-1"
-        />
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt="Dynamic Image"
+              width={500}
+              height={300}
+              priority
+            />
+          )}
 
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Go
-        </button>
-      </form>
+          {enemyName && (
+            <div className="text-lg font-bold mt-4">
+              {enemyName}
+            </div>
+          )}
+
+          {enemyDescription && (
+            <div className="text-md mt-2">
+              {enemyDescription}
+            </div>
+          )}
+
+          <div
+            ref={streamContentRef}
+            className="text-md mt-4 whitespace-pre-wrap overflow-auto"
+            style={{ maxHeight: '500px', border: '1px solid #ccc', padding: '15px' }}
+          >
+            <Markdown>{streamContent}</Markdown>
+          </div>
+
+          <form onSubmit={handleActionSubmit} className="mb-4">
+            <div className="flex justify-center mt-2 mb-2">
+              <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                1
+              </button>
+              <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                2
+              </button>
+              <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                3
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={userAction}
+              onChange={handleActionInputChange}
+              placeholder="Custom action..."
+              className="text-black p-2 rounded border border-gray-300 mr-1"
+            />
+
+            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              Go
+            </button>
+          </form>
+        </>
+      )}
     </main>
   );
 }
