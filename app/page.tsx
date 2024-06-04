@@ -47,7 +47,7 @@ export default function Home() {
       return () => clearInterval(intervalId);
     }
   }, []);
-  
+
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -102,8 +102,51 @@ export default function Home() {
     console.log(enemyName);
     console.log(enemyDescription);
 
+    // Fade out current music and start battle theme
+    if (audioRef.current) {
+      const fadeOutDuration = 1000; // milliseconds
+      const fadeOutInterval = setInterval(() => {
+        if (!audioRef.current) {
+          return;
+        }
+        if (audioRef.current.volume > 0.1) {
+          audioRef.current.volume -= 0.1; // Decrease volume
+        } else {
+          clearInterval(fadeOutInterval);
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+          audioRef.current.src = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3"; // Set the source to the battle theme
+          audioRef.current.volume = 1; // Reset volume to full for the battle theme
+          audioRef.current.loop = true;
+          audioRef.current.play(); // Play the battle theme
+        }
+      }, fadeOutDuration / 10); // Adjust interval timing to control fade-out speed
+    }
+
     handleStartBattleChatResponse(enemyName, enemyDescription);
   };
+
+  function handleBattleOver() {
+    console.log("BattleOver");
+
+    const fadeOutDuration = 1000; // milliseconds
+    const fadeOutInterval = setInterval(() => {
+      if (!audioRef.current) {
+        return;
+      }
+      if (audioRef.current.volume > 0.1) {
+        audioRef.current.volume -= 0.1;
+      } else {
+        clearInterval(fadeOutInterval);
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.src = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Victory%20Awaits%20(trimmed)-zW4Rkx5wPxoey7RDNZByqDXZWywCL7.mp3"; // Set the source to the victory theme
+        audioRef.current.volume = 1;
+        audioRef.current.loop = true;
+        audioRef.current.play();
+      }
+    }, fadeOutDuration / 10);
+  }
 
   // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
   const handleStartBattleChatResponse = async (enemyName: string, enemyDescription: string) => {
@@ -157,6 +200,11 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
 
     // set messageHistory to messages
     setMessageHistory(messages);
+
+    // Check for the <BattleOver> tag after the entire bufferContent has been read
+    if (bufferContent.includes("<BattleOver>")) {
+      handleBattleOver();
+    }
   };
 
   // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
@@ -207,6 +255,11 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
 
     // set messageHistory to messages
     setMessageHistory(messages);
+
+    // Check for the <BattleOver> tag after the entire bufferContent has been read
+    if (bufferContent.includes("<BattleOver>")) {
+      handleBattleOver();
+    }
   };
 
   // Function to handle input changes
@@ -469,12 +522,35 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
         Your browser does not support the audio element.
       </audio>
 
-      <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4">
-        Start Battle
-      </button>
+      {!isVisible && (
+        <>
+          <div className="mb-4">
+            <Image
+              src="/images/portal.webp"
+              alt="portal"
+              width={350}
+              height={350}
+              priority
+            />
+          </div>
+
+          <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4">
+            Enter Portal
+          </button>
+        </>
+      )}
 
       {isVisible && (
         <>
+          <div className="mb-4">
+            <Image
+              src="/images/simulator.webp"
+              alt="simulator"
+              width={350}
+              height={350}
+              priority
+            />
+          </div>
           <p className="text-center text-lg mb-4">You are the Hero, blessed with an overpowered magic system called Echo, in a fantasy world. Battle enemies to your heart's content!</p>
           <form onSubmit={handleFormSubmit} className="mb-4">
             <input
