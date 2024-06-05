@@ -214,7 +214,7 @@ export default function Home() {
         const potentialTagLength = bufferValue.length - bufferValue.indexOf("<");
         if (potentialTagLength > 25) {
           // potential tag length is too long, so remove potential tag from bufferValue
-          
+
           // get string between first character and inclusive of first occurrence of "<"
           deltaValue = bufferValue.substring(0, bufferValue.indexOf("<") + 1);
 
@@ -249,7 +249,7 @@ Simulate a battle between me and and the following opponent: ${enemyName}. ${ene
 
 Don't show the HP of me/opponent. Echo should recommend three actions to take: 1, 2, and 3. Give name and brief description of each action. The format should be like: **1. "Action 1":** Description of Action 1.
 
-Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. Please always provide actions, unless the battle is over, in which case don't provide actions. I'm allowed to choose a custom action as well, in addition to actions, 1, 2, and 3. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
+Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. Please always provide actions, unless the battle is over, in which case don't provide actions. I'm allowed to choose a custom action as well, in addition to actions 1, 2, and 3. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
 
 Additionally, at the end of your response, include a new line with the tag "<<BattleInProgress>>" or "<<BattleOver>>" to indicate if the battle is in progress (enemy not defeated, still actions for user to take) or if the battle is over (enemy defeated, no actions for user to take).
 
@@ -625,13 +625,13 @@ A battle may be over, but never end the simulation; the user is allowed to conti
             />
           </div>
           <p className="text-center text-lg mb-4">You are the Hero, blessed with an overpowered magic system called Echo, in a fantasy world. Battle enemies to your heart's content!</p>
-          <form onSubmit={handleFormSubmit} className="mb-4">
+          <form onSubmit={handleFormSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
             <input
               type="text"
               value={userInput}
               onChange={handleInputChange}
               placeholder="Describe an enemy..."
-              className="text-black p-2 rounded border border-gray-300 mr-1 w-96 disabled:opacity-50"
+              className="text-black p-2 rounded border border-gray-300 mr-1 flex-grow disabled:opacity-50 w-full"
               disabled={isLoading}
             />
             <button
@@ -658,6 +658,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
             </div>
           )}
+
+          <div className="mb-4">
+          </div>
         </>
       )}
 
@@ -705,16 +708,20 @@ A battle may be over, but never end the simulation; the user is allowed to conti
             </button>
           </div>
 
-          <form onSubmit={handleActionSubmit} className="mb-4">
+          <form onSubmit={handleActionSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
             <input
               type="text"
               value={userAction}
               onChange={handleActionInputChange}
               placeholder="Custom action..."
-              className="text-black p-2 rounded border border-gray-300 mr-1 w-96"
+              className="text-black p-2 rounded border border-gray-300 mr-1 flex-grow disabled:opacity-50 w-full"
+              disabled={isLoading}
             />
-
-            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
+              disabled={isLoading}
+            >
               Go
             </button>
           </form>
@@ -726,6 +733,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </button>
             </div>
           )}
+
+          <div className="mb-4">
+          </div>
         </>
       )}
     </main >
