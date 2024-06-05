@@ -72,9 +72,14 @@ export default function Home() {
     setShowSimulator(true);
     setShowBattle(false);
 
+    /*
     if (audioRef.current) {
       audioRef.current.play(); // Play the audio when the start button is clicked
-    }
+    }*/
+
+    fadeOutAndChangeMusic(
+      "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3",
+      10);
   };
 
   // Function to handle user action input changes
@@ -99,6 +104,31 @@ export default function Home() {
     handleBattleTurnChatResponse(action); // Then submit the form
   };
 
+  function fadeOutAndChangeMusic(newSrc: string, fadeOutDuration: number = 500) {
+    // Use setTimeout so that click event is propagated so that mobile audio works
+    if (audioRef.current) {
+      let currentVolume = audioRef.current.volume;
+      const fadeOut = () => {
+        if (!audioRef.current) {
+          return;
+        }
+        if (currentVolume > 0.1) {
+          currentVolume -= 0.1;
+          audioRef.current.volume = currentVolume;
+          setTimeout(fadeOut, fadeOutDuration / 10);
+        } else {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+          audioRef.current.src = newSrc;
+          audioRef.current.volume = 1; // Reset volume to full for the new theme
+          audioRef.current.loop = true;
+          audioRef.current.play(); // Play the new theme
+        }
+      };
+      setTimeout(fadeOut, fadeOutDuration / 10);
+    }
+  }
+
   // start battle function
   const startBattle = async (enemyName: string, enemyDescription: string) => {
     setShowPortal(false);
@@ -120,26 +150,9 @@ export default function Home() {
     console.log(enemyName);
     console.log(enemyDescription);
 
-    // Fade out current music and start battle theme
-    if (audioRef.current) {
-      const fadeOutDuration = 500; // milliseconds
-      const fadeOutInterval = setInterval(() => {
-        if (!audioRef.current) {
-          return;
-        }
-        if (audioRef.current.volume > 0.1) {
-          audioRef.current.volume -= 0.1; // Decrease volume
-        } else {
-          clearInterval(fadeOutInterval);
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          audioRef.current.src = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3"; // Set the source to the battle theme
-          audioRef.current.volume = 1; // Reset volume to full for the battle theme
-          audioRef.current.loop = true;
-          audioRef.current.play(); // Play the battle theme
-        }
-      }, fadeOutDuration / 10); // Adjust interval timing to control fade-out speed
-    }
+    fadeOutAndChangeMusic(
+      "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3",
+      500);
 
     handleStartBattleChatResponse(enemyName, enemyDescription);
   };
@@ -149,26 +162,12 @@ export default function Home() {
     setShowSimulator(true);
     console.log("Exiting battle");
 
-    // Fade out current music and reset to default theme
-    if (audioRef.current) {
-      const fadeOutDuration = 500; // milliseconds
-      const fadeOutInterval = setInterval(() => {
-        if (!audioRef.current) {
-          return;
-        }
-        if (audioRef.current.volume > 0.1) {
-          audioRef.current.volume -= 0.1; // Decrease volume
-        } else {
-          clearInterval(fadeOutInterval);
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          audioRef.current.src = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3"; // Set the source to the default theme
-          audioRef.current.volume = 1; // Reset volume to full for the default theme
-          audioRef.current.loop = true;
-          audioRef.current.play(); // Play the default theme
-        }
-      }, fadeOutDuration / 10); // Adjust interval timing to control fade-out speed
-    }
+    // Reset image URL here as well, since can be delay to load new image and don't want old image to show
+    setImageUrl('');
+
+    fadeOutAndChangeMusic(
+      "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3",
+      500);
   };
 
   function handleBattleOver() {
@@ -180,23 +179,9 @@ export default function Home() {
       setIsBattleOver(true);
     }
 
-    const fadeOutDuration = 1000; // milliseconds
-    const fadeOutInterval = setInterval(() => {
-      if (!audioRef.current) {
-        return;
-      }
-      if (audioRef.current.volume > 0.1) {
-        audioRef.current.volume -= 0.1;
-      } else {
-        clearInterval(fadeOutInterval);
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        audioRef.current.src = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Victory%20Awaits%20(trimmed)-zW4Rkx5wPxoey7RDNZByqDXZWywCL7.mp3"; // Set the source to the victory theme
-        audioRef.current.volume = 1;
-        audioRef.current.loop = true;
-        audioRef.current.play();
-      }
-    }, fadeOutDuration / 10);
+    fadeOutAndChangeMusic(
+      "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Victory%20Awaits%20(trimmed)-zW4Rkx5wPxoey7RDNZByqDXZWywCL7.mp3",
+      1000);
   }
 
   // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
@@ -586,9 +571,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
   return (
     <main className="flex flex-col items-center p-5">
-      <h1 className="text-3xl font-bold text-center mb-8">Fantasy Battle Simulator</h1>
+      <h1 className="text-3xl font-bold text-center mt-4 mb-8">Fantasy Battle Simulator</h1>
 
-      <audio controls ref={audioRef} src="https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3" loop>
+      <audio ref={audioRef} src="https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3" loop>
         Your browser does not support the audio element.
       </audio>
 
@@ -631,8 +616,8 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               className="text-black p-2 rounded border border-gray-300 mr-1 w-96 disabled:opacity-50"
               disabled={isLoading}
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
               disabled={isLoading}>
               Battle!
