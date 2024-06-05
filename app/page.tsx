@@ -16,7 +16,11 @@ type Message = {
 };
 
 export default function Home() {
-  const [isVisible, setIsVisible] = useState(false); // State to control visibility of battle elements
+  // Replace the isVisible state with three separate states
+  const [showPortal, setShowPortal] = useState(true);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [showBattle, setShowBattle] = useState(false);
+
   const [imageUrl, setImageUrl] = useState('');
   const [enemyName, setEnemyName] = useState('');
   const [enemyDescription, setEnemyDescription] = useState('');
@@ -24,6 +28,7 @@ export default function Home() {
   const [userAction, setUserAction] = useState(''); // State to hold user's action input
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
   const [streamContent, setStreamContent] = useState(''); // State to hold stream content
+  const [isBattleOver, setIsBattleOver] = useState(false); // State to hold if the battle is over
 
   const streamContentRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null); // Ref for the audio element
@@ -61,7 +66,9 @@ export default function Home() {
   }, [streamContent]); // Dependency on streamContent to trigger scroll on update
 
   const handleStartClick = () => {
-    setIsVisible(true); // Set visibility to true when start button is clicked
+    setShowPortal(false);
+    setShowSimulator(true);
+    setShowBattle(false);
 
     if (audioRef.current) {
       audioRef.current.play(); // Play the audio when the start button is clicked
@@ -79,6 +86,9 @@ export default function Home() {
     console.log("User action submitted:", userAction);
     // Call handleBattleTurnChatResponse with the user's action
     handleBattleTurnChatResponse(userAction);
+
+    // Clear the input field by resetting userAction state
+    setUserAction('');
   };
 
   // Function to handle specific action button clicks
@@ -89,6 +99,15 @@ export default function Home() {
 
   // start battle function
   const startBattle = async (enemyName: string, enemyDescription: string) => {
+    setShowPortal(false);
+    setShowSimulator(false);
+    setShowBattle(true);
+
+    setIsBattleOver(false);
+
+    // Reset image URL
+    setImageUrl('');
+
     // clear message history and stream content
     setMessageHistory([]);
     setStreamContent('');
@@ -104,7 +123,7 @@ export default function Home() {
 
     // Fade out current music and start battle theme
     if (audioRef.current) {
-      const fadeOutDuration = 1000; // milliseconds
+      const fadeOutDuration = 500; // milliseconds
       const fadeOutInterval = setInterval(() => {
         if (!audioRef.current) {
           return;
@@ -126,10 +145,43 @@ export default function Home() {
     handleStartBattleChatResponse(enemyName, enemyDescription);
   };
 
+  const exitBattle = () => {
+    setShowBattle(false);
+    setShowSimulator(true);
+    console.log("Exiting battle");
+
+    // Fade out current music and reset to default theme
+    if (audioRef.current) {
+      const fadeOutDuration = 500; // milliseconds
+      const fadeOutInterval = setInterval(() => {
+        if (!audioRef.current) {
+          return;
+        }
+        if (audioRef.current.volume > 0.1) {
+          audioRef.current.volume -= 0.1; // Decrease volume
+        } else {
+          clearInterval(fadeOutInterval);
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+          audioRef.current.src = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Mystical%20Adventure-DnRAfQWnw0SB6GgS1rDW7VLRg59cA3.mp3"; // Set the source to the default theme
+          audioRef.current.volume = 1; // Reset volume to full for the default theme
+          audioRef.current.loop = true;
+          audioRef.current.play(); // Play the default theme
+        }
+      }, fadeOutDuration / 10); // Adjust interval timing to control fade-out speed
+    }
+  };
+
   function handleBattleOver() {
     console.log("BattleOver");
 
-    const fadeOutDuration = 1000; // milliseconds
+    if (isBattleOver) {
+      return;
+    } else {
+      setIsBattleOver(true);
+    }
+
+    const fadeOutDuration = 500; // milliseconds
     const fadeOutInterval = setInterval(() => {
       if (!audioRef.current) {
         return;
@@ -157,9 +209,11 @@ Simulate a battle between me and and the following opponent: ${enemyName}. ${ene
 
 Don't show the HP of me/opponent. Echo should recommend three actions to take: 1, 2, and 3. Give name and brief description of each action. The format should be like: **1. "Action 1":** Description of Action 1.
 
-Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. I'm allowed to choose a custom action as well, in addition to actions, 1, 2, and 3. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
+Keep descriptions of the battle and descriptions of the actions brief. Wait for me too choose an action before continuing. Please always provide actions, unless the battle is over, in which case don't provide actions. I'm allowed to choose a custom action as well, in addition to actions, 1, 2, and 3. When the battle ends, don't ask for any follow up actions. As this is just a simulation, violence is allowed; but don't say it's a simulation, consider it as a real battle.
 
-Additionally, at the end of your response, include a new line with the tag "<BattleInProgress>" or "<BattleOver>" to indicate if the battle is in progress (enemy not defeated, still actions for user to take) or if the battle is over (enemy defeated, no actions for user to take).
+Additionally, at the end of your response, include a new line with the tag "<<BattleInProgress>>" or "<<BattleOver>>" to indicate if the battle is in progress (enemy not defeated, still actions for user to take) or if the battle is over (enemy defeated, no actions for user to take).
+
+A battle may be over, but never end the simulation; the user is allowed to continue after the battle. Don't tell the user that it is a simulation.
     `.trim();
 
     // example messages with Message
@@ -202,7 +256,7 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
     setMessageHistory(messages);
 
     // Check for the <BattleOver> tag after the entire bufferContent has been read
-    if (bufferContent.includes("<BattleOver>")) {
+    if (bufferContent.includes("<<BattleOver>>")) {
       handleBattleOver();
     }
   };
@@ -522,14 +576,14 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
         Your browser does not support the audio element.
       </audio>
 
-      {!isVisible && (
+      {showPortal && (
         <>
           <div className="mb-4">
             <Image
               src="/images/portal.webp"
               alt="portal"
-              width={350}
-              height={350}
+              width={420}
+              height={420}
               priority
             />
           </div>
@@ -540,14 +594,14 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
         </>
       )}
 
-      {isVisible && (
+      {showSimulator && (
         <>
           <div className="mb-4">
             <Image
               src="/images/simulator.webp"
               alt="simulator"
-              width={350}
-              height={350}
+              width={420}
+              height={420}
               priority
             />
           </div>
@@ -558,7 +612,7 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
               value={userInput}
               onChange={handleInputChange}
               placeholder="Describe an enemy..."
-              className="text-black p-2 rounded border border-gray-300 mr-1"
+              className="text-black p-2 rounded border border-gray-300 mr-1 w-96"
             />
             <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
               Battle!
@@ -569,12 +623,17 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
             Battle Random Enemy
           </button>
 
+        </>
+      )}
+
+      {showBattle && (
+        <>
           {imageUrl && (
             <Image
               src={imageUrl}
               alt="Dynamic Image"
-              width={500}
-              height={300}
+              width={420}
+              height={420}
               priority
             />
           )}
@@ -599,34 +658,42 @@ Additionally, at the end of your response, include a new line with the tag "<Bat
             <Markdown>{streamContent}</Markdown>
           </div>
 
-          <form onSubmit={handleActionSubmit} className="mb-4">
-            <div className="flex justify-center mt-2 mb-2">
-              <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
-                1
-              </button>
-              <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
-                2
-              </button>
-              <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
-                3
-              </button>
-            </div>
+          <div className="flex justify-center mt-4 mb-4">
+            <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+              1
+            </button>
+            <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+              2
+            </button>
+            <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+              3
+            </button>
+          </div>
 
+          <form onSubmit={handleActionSubmit} className="mb-4">
             <input
               type="text"
               value={userAction}
               onChange={handleActionInputChange}
               placeholder="Custom action..."
-              className="text-black p-2 rounded border border-gray-300 mr-1"
+              className="text-black p-2 rounded border border-gray-300 mr-1 w-96"
             />
 
             <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
               Go
             </button>
           </form>
+
+          {isBattleOver && (
+            <div className="mb-4">
+              <button onClick={exitBattle} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-1">
+                Exit Battle
+              </button>
+            </div>
+          )}
         </>
       )}
-    </main>
+    </main >
   );
 }
 
