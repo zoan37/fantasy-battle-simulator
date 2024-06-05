@@ -184,6 +184,24 @@ export default function Home() {
       1000);
   }
 
+  // New function to process stream content
+  const processStreamContent = async (reader: ReadableStreamDefaultReader, updateStateCallback: (content: string) => void) => {
+    let content = '';
+    let bufferValue = '';
+    let done = false;
+    while (!done) {
+      const { done: readDone, value } = await reader.read();
+      done = readDone;
+      if (done) {
+        console.log("Stream finished.");
+        break;
+      }
+      content += value;
+      updateStateCallback(value);
+    }
+    return content;
+  };
+
   // function that calls getChatResponseStream with current message history, gets the response, and adds it to the message history
   const handleStartBattleChatResponse = async (enemyName: string, enemyDescription: string) => {
     const battlePrompt = `
@@ -197,7 +215,7 @@ Keep descriptions of the battle and descriptions of the actions brief. Wait for 
 
 Additionally, at the end of your response, include a new line with the tag "<<BattleInProgress>>" or "<<BattleOver>>" to indicate if the battle is in progress (enemy not defeated, still actions for user to take) or if the battle is over (enemy defeated, no actions for user to take).
 
-A battle may be over, but never end the simulation; the user is allowed to continue after the battle. Don't tell the user that it is a simulation.
+A battle may be over, but never end the simulation; the user is allowed to continue after the battle. Don't tell the user that it is a simulation. On the turn that the battle is over, don't provide actions though.
     `.trim();
 
     // example messages with Message
@@ -207,31 +225,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     const responseStream = await getChatResponseStream(messages);
     const reader = responseStream.getReader();
 
-    let bufferContent = '';
-    // Function to read the stream using a while loop
-    const readStream = async () => {
-      let done = false;
-      while (!done) {
-        const { done: readDone, value } = await reader.read();
-        done = readDone;
-        if (done) {
-          console.log("Stream finished.");
-          break;
-        }
-
-        let newValue = value;
-        // TODO: if new line or whitespace characters, wait for more values to add,
-        // to detect <BattleInProgress> or <BattleOver> tags. If not detected and stream ends,
-        // make sure to append the values remaining.
-
-        bufferContent += newValue;
-        // console.log(bufferContent);
-        // Update the state with new content, appending it to existing content
-        setStreamContent(prevContent => prevContent + newValue);
-      }
-    };
-
-    await readStream(); // Start reading the stream
+    const bufferContent = await processStreamContent(reader, (newContent) => {
+      setStreamContent(prevContent => prevContent + newContent);
+    });
 
     // add bufferContent to messages
     messages.push({ role: "assistant", content: bufferContent });
@@ -265,25 +261,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     const responseStream = await getChatResponseStream(messages);
     const reader = responseStream.getReader();
 
-    let bufferContent = '';
-    // Function to read the stream using a while loop
-    const readStream = async () => {
-      let done = false;
-      while (!done) {
-        const { done: readDone, value } = await reader.read();
-        done = readDone;
-        if (done) {
-          console.log("Stream finished.");
-          break;
-        }
-        bufferContent += value;
-        // console.log(bufferContent);
-        // Update the state with new content, appending it to existing content
-        setStreamContent(prevContent => prevContent + value);
-      }
-    };
-
-    await readStream(); // Start reading the stream
+    const bufferContent = await processStreamContent(reader, (newContent) => {
+      setStreamContent(prevContent => prevContent + newContent);
+    });
 
     console.log('bufferContent');
     console.log(bufferContent);
