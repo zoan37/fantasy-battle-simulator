@@ -196,9 +196,47 @@ export default function Home() {
         console.log("Stream finished.");
         break;
       }
-      content += value;
-      updateStateCallback(value);
+
+      bufferValue += value;
+
+      let deltaValue = '';
+
+      if (bufferValue.includes("<")) {
+        if (bufferValue.includes("<<BattleInProgress>>")) {
+          // remove <<BattleInProgress>> from bufferValue
+          bufferValue = bufferValue.replace("<<BattleInProgress>>", "");
+        }
+        if (bufferValue.includes("<<BattleOver>>")) {
+          // remove <<BattleOver>> from bufferValue
+          bufferValue = bufferValue.replace("<<BattleOver>>", "");
+        }
+        // get length of bufferValue after first ocurrence of "<"
+        const potentialTagLength = bufferValue.length - bufferValue.indexOf("<");
+        if (potentialTagLength > 25) {
+          // potential tag length is too long, so remove potential tag from bufferValue
+          
+          // get string between first character and inclusive of first occurrence of "<"
+          deltaValue = bufferValue.substring(0, bufferValue.indexOf("<") + 1);
+
+          // set buffer value to the rest of the string
+          bufferValue = bufferValue.substring(bufferValue.indexOf("<") + 1);
+        }
+      } else {
+        deltaValue = bufferValue;
+        bufferValue = '';
+      }
+
+      content += value; // add true value to content
+
+      if (deltaValue.length > 0) {
+        updateStateCallback(deltaValue);
+      }
     }
+
+    if (bufferValue.length > 0) {
+      updateStateCallback(bufferValue);
+    }
+
     return content;
   };
 
