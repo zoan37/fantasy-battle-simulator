@@ -7,7 +7,7 @@ import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
 import Cookies from 'js-cookie';
 import { generateImage } from './image';
-import { generateRandomEnemy } from "./llm";
+import { generateRandomEnemy, generateEnemyFromDescription } from "./llm";
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -394,33 +394,8 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   const fetchOpenRouterResponseWithInput = async (input: string) => {
     try {
       const userDescription = input.trim();
-      const prompt = "Based on the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. If the user provides a name for the enemy, try to respect the name provided it's not vulgar or bad language. Here is the user description:\n" + userDescription;
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "HTTP-Referer": YOUR_SITE_URL,
-          "X-Title": YOUR_SITE_NAME,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "openai/gpt-3.5-turbo",
-          "messages": [{ "role": "user", "content": prompt }],
-          "temperature": 1.0
-        })
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const messageContent = data.choices[0].message.content;
-
-      console.log('messageContent');
-      console.log(messageContent);
-
-      const { name, description } = parseResponseContent(messageContent);
+      const { name, description } = await generateEnemyFromDescription(userDescription);
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
@@ -433,7 +408,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
       setIsLoading(false); // Hide spinner
 
-      return data;
+      return;
     } catch (error) {
       console.error("Failed to fetch from OpenRouter:", error);
 
