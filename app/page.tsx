@@ -6,6 +6,7 @@ import * as fal from "@fal-ai/serverless-client";
 import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
 import Cookies from 'js-cookie';
+import { generateImage } from './image';
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -415,13 +416,17 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       const data = await response.json();
       const messageContent = data.choices[0].message.content;
 
+      console.log('messageContent');
+      console.log(messageContent);
+
       const { name, description } = parseResponseContent(messageContent);
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
       setEnemyName(name);
       setEnemyDescription(description);
-      fetchImage(name + ': ' + description);
+
+      await fetchImage(name + ': ' + description);
 
       startBattle(name, description);
 
@@ -486,6 +491,16 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   };
 
   const fetchImage = async (descriptionPrompt: string) => {
+    const result = await generateImage(descriptionPrompt);
+
+    console.log('Setting image');
+    console.log(result.imageUrl);
+
+    setImageUrl(result.imageUrl);
+  };
+
+  /*
+  const fetchImage = async (descriptionPrompt: string) => {
     const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
       input: {
         prompt: descriptionPrompt,
@@ -503,11 +518,15 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     });
 
     if (result.images.length > 0) {
+      console.log('Setting image');
+      console.log(result.images[0].url);
+
       setImageUrl(result.images[0].url);
     } else {
       console.error("No images found in result");
     }
   };
+  */
 
   async function getChatResponseStream(
     messages: Message[]
@@ -670,7 +689,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
                 </select>
               </div>
-              <hr className="mb-4"/>
+              <hr className="mb-4" />
               <div className="mb-4">
                 Fantasy Battle Simulator lets you battle an enemy of your imagination or a random one. You are the Hero in a fantasy world, where you are blessed with an overpowered magic system named Echo.
                 Echo has a vast knowledge of spells, and can help analyze the battle situation and provide actions.
