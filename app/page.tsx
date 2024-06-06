@@ -7,6 +7,7 @@ import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
 import Cookies from 'js-cookie';
 import { generateImage } from './image';
+import { generateRandomEnemy } from "./llm";
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -443,30 +444,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   const fetchOpenRouterResponse = async () => {
     setIsLoading(true); // Show spinner
     try {
-      const prompt = "Generate a random enemy in a fantasy world. No spiders as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "HTTP-Referer": YOUR_SITE_URL,
-          "X-Title": YOUR_SITE_NAME,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "openai/gpt-3.5-turbo",
-          "messages": [{ "role": "user", "content": prompt }],
-          "temperature": 1.0
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const messageContent = data.choices[0].message.content;
-
-      const { name, description } = parseResponseContent(messageContent);
+      const { name, description } = await generateRandomEnemy();
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
@@ -482,7 +460,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
       setIsLoading(false); // Hide spinner
 
-      return data;
+      return;
     } catch (error) {
       console.error("Failed to fetch from OpenRouter:", error);
 
@@ -498,35 +476,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
     setImageUrl(result.imageUrl);
   };
-
-  /*
-  const fetchImage = async (descriptionPrompt: string) => {
-    const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
-      input: {
-        prompt: descriptionPrompt,
-        negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, duplicates. signature, watermark. cartoon, illustration, animation."
-      },
-      logs: true,
-      onQueueUpdate: (status: fal.QueueStatus) => {
-        if (status.status === "IN_PROGRESS" && status.logs) {
-          status.logs.map((log: { message: any; }) => log.message).forEach(console.log);
-        }
-        if (status.status === "COMPLETED") {
-          console.log("Image generation complete");
-        }
-      },
-    });
-
-    if (result.images.length > 0) {
-      console.log('Setting image');
-      console.log(result.images[0].url);
-
-      setImageUrl(result.images[0].url);
-    } else {
-      console.error("No images found in result");
-    }
-  };
-  */
 
   async function getChatResponseStream(
     messages: Message[]
