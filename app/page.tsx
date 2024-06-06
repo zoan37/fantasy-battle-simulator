@@ -7,7 +7,8 @@ import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
 import Cookies from 'js-cookie';
 import { generateImage } from './image';
-import { generateRandomEnemy, generateEnemyFromDescription } from "./llm";
+import { generateRandomEnemy, generateEnemyFromDescription, getBattleChatResponseStream } from "./llm";
+import { readStreamableValue } from 'ai/rsc';
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -455,7 +456,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   async function getChatResponseStream(
     messages: Message[]
   ) {
-
     console.log('getChatResponseStream');
 
     console.log('messages');
@@ -465,75 +465,57 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       async start(controller: ReadableStreamDefaultController) {
         try {
           let isStreamed = false;
-          const generation = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-              "HTTP-Referer": `${YOUR_SITE_URL}`, // Optional, for including your app on openrouter.ai rankings.
-              "X-Title": `${YOUR_SITE_NAME}`, // Optional. Shows in rankings on openrouter.ai.
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              // "model": "openai/gpt-3.5-turbo",
-              "model": "meta-llama/llama-3-70b-instruct:nitro",
-              "messages": messages,
-              "temperature": 1.0,
-              "stream": true,
-            })
-          });
 
-          if (generation.body) {
-            const reader = generation.body.getReader();
+          const { output } = await getBattleChatResponseStream(messages);
+
+          if (output) {
             try {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+              for await (const chunk of readStreamableValue(output)) {
+                if (chunk) {
+                  // console.log('value');
+                  // console.log(value);
 
-                // console.log('value');
-                // console.log(value);
+                  // Assuming the stream is text, convert the Uint8Array to a string
+                  // let chunk = new TextDecoder().decode(value);
+                  // Process the chunk here (e.g., append it to the controller for streaming to the client)
+                  // console.log(chunk); // Or handle the chunk as needed
 
-                // Assuming the stream is text, convert the Uint8Array to a string
-                let chunk = new TextDecoder().decode(value);
-                // Process the chunk here (e.g., append it to the controller for streaming to the client)
-                // console.log(chunk); // Or handle the chunk as needed
+                  // split the chunk into lines
+                  let lines = chunk.split('\n');
+                  // console.log('lines');
+                  // console.log(lines);
 
-                // split the chunk into lines
-                let lines = chunk.split('\n');
-                // console.log('lines');
-                // console.log(lines);
-
-                const SSE_COMMENT = ": OPENROUTER PROCESSING";
+                  const SSE_COMMENT = ": OPENROUTER PROCESSING";
 
 
-                // filter out lines that start with SSE_COMMENT
-                lines = lines.filter((line) => !line.trim().startsWith(SSE_COMMENT));
+                  // filter out lines that start with SSE_COMMENT
+                  lines = lines.filter((line) => !line.trim().startsWith(SSE_COMMENT));
 
-                // filter out lines that end with "data: [DONE]"
-                lines = lines.filter((line) => !line.trim().endsWith("data: [DONE]"));
+                  // filter out lines that end with "data: [DONE]"
+                  lines = lines.filter((line) => !line.trim().endsWith("data: [DONE]"));
 
-                // Filter out empty lines and lines that do not start with "data:"
-                const dataLines = lines.filter(line => line.startsWith("data:"));
+                  // Filter out empty lines and lines that do not start with "data:"
+                  const dataLines = lines.filter(line => line.startsWith("data:"));
 
-                // Extract and parse the JSON from each data line
-                const messages = dataLines.map(line => {
-                  // Remove the "data: " prefix and parse the JSON
-                  const jsonStr = line.substring(5); // "data: ".length == 5
-                  return JSON.parse(jsonStr);
-                });
+                  // Extract and parse the JSON from each data line
+                  const messages = dataLines.map(line => {
+                    // Remove the "data: " prefix and parse the JSON
+                    const jsonStr = line.substring(5); // "data: ".length == 5
+                    return JSON.parse(jsonStr);
+                  });
 
-                // loop through messages and enqueue them to the controller
-                messages.forEach((message) => {
-                  const content = message.choices[0].delta.content;
-                  // console.log(content);
-                  controller.enqueue(content);
-                });
+                  // loop through messages and enqueue them to the controller
+                  messages.forEach((message) => {
+                    const content = message.choices[0].delta.content;
+                    // console.log(content);
+                    controller.enqueue(content);
+                  });
 
-                isStreamed = true;
+                  isStreamed = true;
+                }
               }
             } catch (error) {
               console.error('Error reading the stream', error);
-            } finally {
-              reader.releaseLock();
             }
           }
 

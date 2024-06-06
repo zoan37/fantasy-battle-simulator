@@ -1,5 +1,7 @@
 "use server"
 
+import { createStreamableValue } from 'ai/rsc';
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = ""; // TODO: fill in site url
 const YOUR_SITE_NAME = "Fantasy Battle Simulator";
@@ -64,7 +66,7 @@ export async function generateRandomEnemy() {
  */
 export async function generateEnemyFromDescription(userDescription: string): Promise<{ name: string, description: string }> {
     userDescription = userDescription.trim();
-    
+
     const prompt = "Based on the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. If the user provides a name for the enemy, try to respect the name provided it's not vulgar or bad language. Here is the user description:\n" + userDescription;
 
     try {
@@ -93,6 +95,67 @@ export async function generateEnemyFromDescription(userDescription: string): Pro
         return parseEnemyResponseContent(messageContent);
     } catch (error) {
         console.error("Error fetching from OpenRouter:", error);
+        throw error;
+    }
+}
+
+type Message = {
+    role: "assistant" | "system" | "user";
+    content: string;
+};
+
+export async function getBattleChatResponseStream(messages: Message[]) {
+    try {
+        const stream = createStreamableValue('');
+
+        (async () => {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "HTTP-Referer": YOUR_SITE_URL,
+                    "X-Title": YOUR_SITE_NAME,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "meta-llama/llama-3-70b-instruct:nitro",
+                    "messages": messages,
+                    "temperature": 1.0,
+                    "stream": true,
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            if (!response.body) {
+                throw new Error("No body found in the response");
+            }
+
+            const reader = response.body.getReader();
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                let chunk = new TextDecoder().decode(value);
+
+                stream.update(chunk);
+              }
+            } catch (error) {
+              console.error('Error reading the stream', error);
+              throw error;
+            } finally {
+              reader.releaseLock();
+            }
+
+            stream.done();
+        })();
+
+        return { output: stream.value };
+    } catch (error) {
+        console.error("Failed to fetch from OpenRouter:", error);
         throw error;
     }
 }
