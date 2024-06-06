@@ -42,6 +42,13 @@ export default function Home() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const EPIC_CONFRONTATION_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3';
+  const INTO_THE_FLAMES_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Into%20the%20Flames-VQJVdTSO9Pmb2t4nPsLdGgQPWgHReh.mp3';
+  const TRIUMPH_OF_LEGENDS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Triumph%20of%20Legends-HrF2MfygLBNMWgvdTI5tW8EP48KkWK.mp3';
+  const CLASH_OF_TITANS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Clash%20of%20Titans-gwhdW9DtathcRSPseOINlRULvLzCs1.mp3';
+
+  const DEFAULT_BATTLE_THEME = EPIC_CONFRONTATION_BATTLE_THEME;
+
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -161,7 +168,7 @@ export default function Home() {
     console.log(enemyDescription);
 
     fadeOutAndChangeMusic(
-      "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3",
+      DEFAULT_BATTLE_THEME,
       500);
 
     handleStartBattleChatResponse(enemyName, enemyDescription);
@@ -807,7 +814,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
           </>
         )}
       </main>
-      
       <Analytics />
     </>
   );
