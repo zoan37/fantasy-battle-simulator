@@ -387,7 +387,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   const fetchOpenRouterResponseWithInput = async (input: string) => {
     try {
       const userDescription = input.trim();
-      const prompt = "Given the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. Here is the user description:\n" + userDescription;
+      const prompt = "Based on the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. If the user provides a name for the enemy, try to respect the name provided it's not vulgar or bad language. Here is the user description:\n" + userDescription;
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
