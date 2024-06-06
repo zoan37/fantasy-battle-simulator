@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import * as fal from "@fal-ai/serverless-client";
 import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
+import Cookies from 'js-cookie';
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -47,7 +48,11 @@ export default function Home() {
   const TRIUMPH_OF_LEGENDS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Triumph%20of%20Legends-HrF2MfygLBNMWgvdTI5tW8EP48KkWK.mp3';
   const CLASH_OF_TITANS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Clash%20of%20Titans-gwhdW9DtathcRSPseOINlRULvLzCs1.mp3';
 
-  const DEFAULT_BATTLE_THEME = EPIC_CONFRONTATION_BATTLE_THEME;
+  const [defaultBattleTheme, setDefaultBattleTheme] = useState(() => Cookies.get('defaultBattleTheme') || EPIC_CONFRONTATION_BATTLE_THEME);
+
+  useEffect(() => {
+    Cookies.set('defaultBattleTheme', defaultBattleTheme, { expires: 360 }); // Expires in 360 days
+  }, [defaultBattleTheme]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -168,7 +173,7 @@ export default function Home() {
     console.log(enemyDescription);
 
     fadeOutAndChangeMusic(
-      DEFAULT_BATTLE_THEME,
+      defaultBattleTheme,
       500);
 
     handleStartBattleChatResponse(enemyName, enemyDescription);
@@ -604,6 +609,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     return stream;
   }
 
+  // Function to change the battle theme
+  const changeBattleTheme = (newTheme: string) => {
+    setDefaultBattleTheme(newTheme);
+    if (showBattle) {
+      fadeOutAndChangeMusic(newTheme, 500);
+    }
+  };
+
   return (
     <>
       <main className="flex flex-col items-center p-5">
@@ -642,7 +655,22 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               className="bg-white p-5 rounded-lg max-w-screen-md"
               onClick={(e) => e.stopPropagation()} // This prevents clicks inside the modal from closing it
             >
-              <h2 className="text-lg font-bold mb-4">App</h2>
+              <h2 className="text-lg font-bold mb-4">Settings</h2>
+              <div className="mb-4">
+                <label htmlFor="battleTheme" className="block mb-2 text-sm font-medium text-gray-900">Default Battle Theme:</label>
+                <select
+                  id="battleTheme"
+                  value={defaultBattleTheme}
+                  onChange={(e) => changeBattleTheme(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                >
+                  <option value={EPIC_CONFRONTATION_BATTLE_THEME}>Epic Confrontation</option>
+                  <option value={INTO_THE_FLAMES_BATTLE_THEME}>Into the Flames</option>
+                  <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
+                  <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
+                </select>
+              </div>
+              <hr className="mb-4"/>
               <div className="mb-4">
                 Fantasy Battle Simulator lets you battle an enemy of your imagination or a random one. You are the Hero in a fantasy world, where you are blessed with an overpowered magic system named Echo.
                 Echo has a vast knowledge of spells, and can help analyze the battle situation and provide actions.
@@ -651,7 +679,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 The battle log records the enemies you've encountered. Share an enemy with a link.
               </div>
               <div className="mb-4">
-                Made by <a href="https://twitter.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
+                Made by <a href="https://x.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
               </div>
               <div className="text-right">
                 <button onClick={toggleModal} className="mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
