@@ -9,6 +9,7 @@ import Cookies from 'js-cookie';
 import { generateImage } from './image';
 import { generateRandomEnemy, generateEnemyFromDescription, getBattleChatResponseStream } from "./llm";
 import { readStreamableValue } from 'ai/rsc';
+import { unstable_noStore as noStore } from 'next/cache';
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -21,6 +22,9 @@ type Message = {
 };
 
 export default function Home() {
+  noStore();
+  // TODO: break out streamed text area into its own component, and call noStore there
+
   // Replace the isVisible state with three separate states
   const [showPortal, setShowPortal] = useState(true);
   const [showSimulator, setShowSimulator] = useState(false);

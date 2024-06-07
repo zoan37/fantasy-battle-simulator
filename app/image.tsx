@@ -26,7 +26,7 @@ export async function generateImage(prompt: string) {
     if (!prompt) {
         throw new Error('No prompt provided');
     }
- 
+
     // Call FAL to generate the image
     const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
         input: {
