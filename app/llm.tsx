@@ -135,19 +135,19 @@ export async function getBattleChatResponseStream(messages: Message[]) {
 
             const reader = response.body.getReader();
             try {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                let chunk = new TextDecoder().decode(value);
+                    let chunk = new TextDecoder().decode(value);
 
-                stream.update(chunk);
-              }
+                    stream.update(chunk);
+                }
             } catch (error) {
-              console.error('Error reading the stream', error);
-              throw error;
+                console.error('Error reading the stream', error);
+                throw error;
             } finally {
-              reader.releaseLock();
+                reader.releaseLock();
             }
 
             stream.done();

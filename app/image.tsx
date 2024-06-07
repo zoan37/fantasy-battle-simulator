@@ -2,6 +2,8 @@
 
 import * as fal from "@fal-ai/serverless-client";
 
+export const maxDuration = 15; // more leeway for image generation to finish
+
 // Configure FAL with your API key
 fal.config({
     credentials: process.env.FAL_AI_KEY,
@@ -26,7 +28,7 @@ export async function generateImage(prompt: string) {
     if (!prompt) {
         throw new Error('No prompt provided');
     }
- 
+
     // Call FAL to generate the image
     const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
         input: {
