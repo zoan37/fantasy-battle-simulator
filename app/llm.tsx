@@ -22,6 +22,9 @@ const parseEnemyResponseContent = (messageContent: string) => {
     return { name, description };
 };
 
+// TODO: if too many messages in battle, do middle-out on client side, so server requests
+// to openrouter don't get too big
+
 /**
  * Generate a random enemy using OpenRouter.
  * @returns {Promise<{name: string, description: string}>} The name and description of the generated enemy.

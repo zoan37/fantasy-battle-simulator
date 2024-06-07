@@ -69,7 +69,16 @@ export default function Home() {
 
       const intervalId = setInterval(() => {
         if (audio.duration - audio.currentTime <= fadeOutDuration) {
-          const newVolume = (audio.duration - audio.currentTime) / fadeOutDuration;
+          let newVolume = (audio.duration - audio.currentTime) / fadeOutDuration;
+
+          // clamp volume between 0 and 1 just in case
+          if (newVolume < 0) {
+            newVolume = 0;
+          }
+          if (newVolume > 1) {
+            newVolume = 1;
+          }
+
           setVolume(newVolume);
         } else {
           setVolume(1);
@@ -143,13 +152,23 @@ export default function Home() {
         }
         if (currentVolume > 0.1) {
           currentVolume -= 0.1;
+
+          // if currentVolume is < 0, set to 0
+          // do this in case, trying to debug IndexSizeError on mobile
+          if (currentVolume < 0) {
+            currentVolume = 0;
+          }
+
           audioRef.current.volume = currentVolume;
+
           setTimeout(fadeOut, fadeOutDuration / 10);
         } else {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
           audioRef.current.src = newSrc;
+
           audioRef.current.volume = 1; // Reset volume to full for the new theme
+          
           audioRef.current.loop = true;
           audioRef.current.play(); // Play the new theme
         }
@@ -374,26 +393,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       }
     ];
     prompt: string;
-  };
-
-  const OPENROUTER_API_KEY = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-  const YOUR_SITE_URL = "";
-  const YOUR_SITE_NAME = "Fantasy Battle Simulator";
-
-  const parseResponseContent = (messageContent: string) => {
-    const nameMatch = messageContent.match(/^\s*Name:\s*(.+)$/m);
-    if (!nameMatch) {
-      throw new Error("Name not found in the message content.");
-    }
-    const name = nameMatch[1].trim();
-
-    const descriptionMatch = messageContent.match(/Description:\s*(.+)/s);
-    if (!descriptionMatch) {
-      throw new Error("Description not found in the message content.");
-    }
-    const description = descriptionMatch[1].trim();
-
-    return { name, description };
   };
 
   const fetchOpenRouterResponseWithInput = async (input: string) => {
