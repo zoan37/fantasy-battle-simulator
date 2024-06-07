@@ -3,7 +3,7 @@
 import { createStreamableValue } from 'ai/rsc';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const YOUR_SITE_URL = ""; // TODO: fill in site url
+const YOUR_SITE_URL = "https://fantasy-battle-simulator.vercel.app/";
 const YOUR_SITE_NAME = "Fantasy Battle Simulator";
 
 const parseEnemyResponseContent = (messageContent: string) => {
