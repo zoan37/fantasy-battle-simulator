@@ -91,7 +91,13 @@ export default function Home() {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume;
+      // Clamp the volume value between 0 and 1
+      // Doing this in attempt to prevent IndexSizeError encountered on mobile (possibly caused by volume out of bounds)
+      const clampedVolume = Math.max(0, Math.min(volume, 1));
+      if (clampedVolume !== volume) {
+        console.error(`Volume out of bounds: ${volume}. Clamped to ${clampedVolume}.`);
+      }
+      audioRef.current.volume = clampedVolume;
     }
   }, [volume]);
 
@@ -168,7 +174,7 @@ export default function Home() {
           audioRef.current.src = newSrc;
 
           audioRef.current.volume = 1; // Reset volume to full for the new theme
-          
+
           audioRef.current.loop = true;
           audioRef.current.play(); // Play the new theme
         }
