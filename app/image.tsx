@@ -2,8 +2,6 @@
 
 import * as fal from "@fal-ai/serverless-client";
 
-export const maxDuration = 15; // more leeway for image generation to finish
-
 // Configure FAL with your API key
 fal.config({
     credentials: process.env.FAL_AI_KEY,
