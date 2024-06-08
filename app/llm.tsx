@@ -7,9 +7,14 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
 import * as schema from '../drizzle/schema';
+import Sqids from "sqids";
 
 const db = drizzle(sql, { schema })
 import { EnemiesTable } from '../drizzle/schema';
+
+const sqids = new Sqids({
+    minLength: 8
+});
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = "https://fantasy-battle-simulator.vercel.app/";
@@ -202,19 +207,24 @@ async function uploadImage(image: { imageUrl: string }) {
     return blob;
 }
 
+interface WriteEnemyResult {
+    id: number;
+    // include other properties if there are more
+}
+
 // async function to write enemy to Enemies table
-async function writeEnemyToDb(enemy: { type: string, name: string; description: string; imageUrl: string }) {
+async function writeEnemyToDb(enemy: { type: string, name: string; description: string; imageUrl: string }): Promise<WriteEnemyResult> {
     // insert enemy into Enemies table, with db
     const result = await db.insert(EnemiesTable).values({
         type: enemy.type,
         name: enemy.name,
         description: enemy.description,
         imageUrl: enemy.imageUrl
+    }).returning({
+        id: EnemiesTable.id
     });
 
-    // console.log(result);
-
-    return result;
+    return result[0];
 }
 
 export async function createEnemy(params: CreateEnemyParams) {
@@ -236,12 +246,19 @@ export async function createEnemy(params: CreateEnemyParams) {
             type: "random",
             name: enemy.name,
             description: enemy.description,
-            imageUrl: imageBlob.url
+            imageUrl: imageBlob.url,
+            hash: ""
         };
 
         console.log("Writing to database");
 
-        await writeEnemyToDb(enemyInfo);
+        const writeResult = await writeEnemyToDb(enemyInfo);
+        const enemyId = writeResult.id;
+        const enemyHash = sqids.encode([enemyId]);
+
+        enemyInfo.hash = enemyHash;
+
+        console.log('Enemy hash:', enemyHash);
 
         return enemyInfo;
 
@@ -263,12 +280,19 @@ export async function createEnemy(params: CreateEnemyParams) {
             type: "custom",
             name: enemy.name,
             description: enemy.description,
-            imageUrl: imageBlob.url
+            imageUrl: imageBlob.url,
+            hash: ""
         };
 
         console.log("Writing to database");
 
-        await writeEnemyToDb(enemyInfo);
+        const writeResult = await writeEnemyToDb(enemyInfo);
+        const enemyId = writeResult.id;
+        const enemyHash = sqids.encode([enemyId]);
+
+        enemyInfo.hash = enemyHash;
+
+        console.log('Enemy hash:', enemyHash);
 
         return enemyInfo;
     }
@@ -278,9 +302,10 @@ export async function createEnemy(params: CreateEnemyParams) {
 
 // Function to retrieve an enemy from the database by its name
 export async function getEnemy(enemyHash: string) {
-    try {
-        const enemyId = Number(enemyHash);
+    const numbers = sqids.decode(enemyHash);
+    const enemyId = numbers[0];
 
+    try {
         // don't expose id
         const result = await db.select({
             name: EnemiesTable.name,

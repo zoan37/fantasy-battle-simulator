@@ -472,6 +472,11 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       const name = enemy.name;
       const description = enemy.description;
       const imageUrl = enemy.imageUrl;
+      const enemyHash = enemy.hash;
+
+      console.log('Enemy hash:', enemyHash);
+
+      // TODO: store enemy in battle log
 
       // log the name and description
       console.log("Name:", name);
@@ -509,6 +514,11 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       const name = enemy.name;
       const description = enemy.description;
       const imageUrl = enemy.imageUrl;
+      const enemyHash = enemy.hash;
+
+      console.log('Enemy hash:', enemyHash);
+
+      // TODO: store enemy in battle log
 
       // log the name and description
       console.log("Name:", name);
