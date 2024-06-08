@@ -3,11 +3,11 @@
 import { createStreamableValue } from 'ai/rsc';
 import { generateImage } from './image';
 import { put } from '@vercel/blob';
-
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
 import * as schema from '../drizzle/schema';
- 
+
 const db = drizzle(sql, { schema })
 import { EnemiesTable } from '../drizzle/schema';
 
@@ -271,6 +271,37 @@ export async function createEnemy(params: CreateEnemyParams) {
         await writeEnemyToDb(enemyInfo);
 
         return enemyInfo;
+    }
+}
+
+// TODO: use sqid for enemy id hash
+
+// Function to retrieve an enemy from the database by its name
+export async function getEnemy(enemyHash: string) {
+    try {
+        const enemyId = Number(enemyHash);
+
+        // don't expose id
+        const result = await db.select({
+            name: EnemiesTable.name,
+            description: EnemiesTable.description,
+            imageUrl: EnemiesTable.imageUrl
+        })
+            .from(EnemiesTable)
+            .where(eq(EnemiesTable.id, enemyId));
+
+        if (result.length === 0) {
+            return {
+                enemy: null
+            }
+        }
+
+        return {
+            enemy: result[0]
+        }
+    } catch (error) {
+        console.error("Error retrieving enemy from database:", error);
+        throw error;
     }
 }
 
