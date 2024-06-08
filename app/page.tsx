@@ -25,6 +25,10 @@ type Message = {
 
 // TODO: fix music stops playing after close laptop screen, and reopen
 
+// TODO: back button exit battle early. should pop up alert for confirmation.
+
+// TODO: button for easy sharing of enemy
+
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -547,7 +551,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
                       console.log("Source dataLines:");
                       console.log(dataLines);
-                      
+
                       console.log("Source chunk:");
                       console.log(chunk);
 
