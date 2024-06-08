@@ -21,6 +21,8 @@ type Message = {
   content: string;
 };
 
+// TODO: store local history of prompts you've used, in case you want to re-use
+
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -54,7 +56,7 @@ export default function Home() {
   const INTO_THE_FLAMES_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Into%20the%20Flames-VQJVdTSO9Pmb2t4nPsLdGgQPWgHReh.mp3';
   const TRIUMPH_OF_LEGENDS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Triumph%20of%20Legends-HrF2MfygLBNMWgvdTI5tW8EP48KkWK.mp3';
   const CLASH_OF_TITANS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Clash%20of%20Titans-gwhdW9DtathcRSPseOINlRULvLzCs1.mp3';
-
+  const VICTORY_RISE_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Victory%20Rise-qugw4036xCy6cdPDnu9MDErI8Vbfmx.mp3';
   const [defaultBattleTheme, setDefaultBattleTheme] = useState(() => Cookies.get('defaultBattleTheme') || EPIC_CONFRONTATION_BATTLE_THEME);
 
   useEffect(() => {
@@ -602,6 +604,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   <option value={INTO_THE_FLAMES_BATTLE_THEME}>Into the Flames</option>
                   <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
                   <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
+                  <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
                 </select>
               </div>
               <hr className="mb-4" />
