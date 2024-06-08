@@ -2,6 +2,7 @@
 
 import { createStreamableValue } from 'ai/rsc';
 import { generateImage } from './image';
+import { put } from '@vercel/blob';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = "https://fantasy-battle-simulator.vercel.app/";
@@ -174,6 +175,26 @@ interface CreateEnemyParams {
     description: string;
 }
 
+// function to parse image name from url
+// e.g. https://fal.media/files/rabbit/7_iD9sPgq1EweJfxerKB5.jpeg&w=1080&q=75 -> 7_iD9sPgq1EweJfxerKB5.jpeg
+function parseImageNameFromUrl(url: string) {
+    const imageName = url.split('/').pop()?.split('&')[0];
+    if (!imageName) {
+        throw new Error("Image name could not be parsed from URL.");
+    }
+    return imageName;
+}
+
+// async function to upload image
+async function uploadImage(image: { imageUrl: string }) {
+    const imageName = parseImageNameFromUrl(image.imageUrl);
+    const imageData = await fetch(image.imageUrl).then(r => r.blob());
+    const blob = await put(imageName, imageData, {
+      access: 'public',
+    });
+    return blob;
+}
+
 export async function createEnemy(params: CreateEnemyParams) {
     if (params.random) {
         let enemy = await generateRandomEnemy();
@@ -181,12 +202,12 @@ export async function createEnemy(params: CreateEnemyParams) {
         let imagePrompt = getImagePrompt(enemy);
         let image = await generateImage(imagePrompt);
 
-        let imageUrl = image.imageUrl;
+        let imageBlob = await uploadImage(image);
 
         return {
             name: enemy.name,
             description: enemy.description,
-            imageUrl: imageUrl
+            imageUrl: imageBlob.url
         };
 
     } else {
@@ -195,12 +216,12 @@ export async function createEnemy(params: CreateEnemyParams) {
         let imagePrompt = getImagePrompt(enemy);
         let image = await generateImage(imagePrompt);
 
-        let imageUrl = image.imageUrl;
-        
+        let imageBlob = await uploadImage(image);
+
         return {
             name: enemy.name,
             description: enemy.description,
-            imageUrl: imageUrl
+            imageUrl: imageBlob.url
         };
     }
 }
