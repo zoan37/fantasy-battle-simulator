@@ -1,6 +1,7 @@
 "use server"
 
 import { createStreamableValue } from 'ai/rsc';
+import { generateImage } from './image';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = "https://fantasy-battle-simulator.vercel.app/";
@@ -162,3 +163,45 @@ export async function getBattleChatResponseStream(messages: Message[]) {
         throw error;
     }
 }
+
+function getImagePrompt(enemy: { name: string; description: string }) {
+    return enemy.name + ': ' + enemy.description;
+}
+
+// function to create an enemy, with parameters random boolean or user description
+interface CreateEnemyParams {
+    random: boolean;
+    description: string;
+}
+
+export async function createEnemy(params: CreateEnemyParams) {
+    if (params.random) {
+        let enemy = await generateRandomEnemy();
+
+        let imagePrompt = getImagePrompt(enemy);
+        let image = await generateImage(imagePrompt);
+
+        let imageUrl = image.imageUrl;
+
+        return {
+            name: enemy.name,
+            description: enemy.description,
+            imageUrl: imageUrl
+        };
+
+    } else {
+        let enemy = await generateEnemyFromDescription(params.description);
+
+        let imagePrompt = getImagePrompt(enemy);
+        let image = await generateImage(imagePrompt);
+
+        let imageUrl = image.imageUrl;
+        
+        return {
+            name: enemy.name,
+            description: enemy.description,
+            imageUrl: imageUrl
+        };
+    }
+}
+

@@ -7,7 +7,7 @@ import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
 import Cookies from 'js-cookie';
 import { generateImage } from './image';
-import { generateRandomEnemy, generateEnemyFromDescription, getBattleChatResponseStream } from "./llm";
+import { generateRandomEnemy, generateEnemyFromDescription, getBattleChatResponseStream, createEnemy } from "./llm";
 import { readStreamableValue } from 'ai/rsc';
 import { unstable_noStore as noStore } from 'next/cache';
 
@@ -407,14 +407,29 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     try {
       const userDescription = input.trim();
 
-      const { name, description } = await generateEnemyFromDescription(userDescription);
+      // const { name, description } = await generateEnemyFromDescription(userDescription);
+
+      // await fetchImage(name + ': ' + description);
+
+      const enemy = await createEnemy({
+        random: false,
+        description: userDescription
+      })
+
+      const name = enemy.name;
+      const description = enemy.description;
+      const imageUrl = enemy.imageUrl;
+
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
       setEnemyName(name);
       setEnemyDescription(description);
 
-      await fetchImage(name + ': ' + description);
+      console.log('Setting image');
+      console.log(imageUrl);
+
+      setImageUrl(imageUrl);
 
       startBattle(name, description);
 
@@ -431,17 +446,27 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   const fetchOpenRouterResponse = async () => {
     setIsLoading(true); // Show spinner
     try {
-      const { name, description } = await generateRandomEnemy();
+      // const { name, description } = await generateRandomEnemy();
+
+      const enemy = await createEnemy({
+        random: true,
+        description: ''
+      });
+
+      const name = enemy.name;
+      const description = enemy.description;
+      const imageUrl = enemy.imageUrl;
+
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
       setEnemyName(name);
       setEnemyDescription(description);
 
-      // Reset image URL
-      setImageUrl('');
+      console.log('Setting image');
+      console.log(imageUrl);
 
-      await fetchImage(name + ': ' + description);
+      setImageUrl(imageUrl);
 
       startBattle(name, description);
 
