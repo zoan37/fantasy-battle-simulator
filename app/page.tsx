@@ -23,6 +23,8 @@ type Message = {
 
 // TODO: store local history of prompts you've used, in case you want to re-use
 
+// TODO: fix music stops playing after close laptop screen, and reopen
+
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -537,7 +539,20 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   const messages = dataLines.map(line => {
                     // Remove the "data: " prefix and parse the JSON
                     const jsonStr = line.substring(5); // "data: ".length == 5
-                    return JSON.parse(jsonStr);
+                    try {
+                      return JSON.parse(jsonStr);
+                    } catch (e) {
+                      console.log("Failed to parse jsonStr:");
+                      console.log(jsonStr)
+
+                      console.log("Source dataLines:");
+                      console.log(dataLines);
+                      
+                      console.log("Source chunk:");
+                      console.log(chunk);
+
+                      throw e;
+                    }
                   });
 
                   // loop through messages and enqueue them to the controller

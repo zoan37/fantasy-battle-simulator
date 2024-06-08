@@ -4,6 +4,13 @@ import { createStreamableValue } from 'ai/rsc';
 import { generateImage } from './image';
 import { put } from '@vercel/blob';
 
+import { drizzle } from 'drizzle-orm/vercel-postgres';
+import { sql } from '@vercel/postgres';
+import * as schema from '../drizzle/schema';
+ 
+const db = drizzle(sql, { schema })
+import { EnemiesTable } from '../drizzle/schema';
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = "https://fantasy-battle-simulator.vercel.app/";
 const YOUR_SITE_NAME = "Fantasy Battle Simulator";
@@ -190,39 +197,80 @@ async function uploadImage(image: { imageUrl: string }) {
     const imageName = parseImageNameFromUrl(image.imageUrl);
     const imageData = await fetch(image.imageUrl).then(r => r.blob());
     const blob = await put(imageName, imageData, {
-      access: 'public',
+        access: 'public',
     });
     return blob;
 }
 
+// async function to write enemy to Enemies table
+async function writeEnemyToDb(enemy: { type: string, name: string; description: string; imageUrl: string }) {
+    // insert enemy into Enemies table, with db
+    const result = await db.insert(EnemiesTable).values({
+        type: enemy.type,
+        name: enemy.name,
+        description: enemy.description,
+        imageUrl: enemy.imageUrl
+    });
+
+    // console.log(result);
+
+    return result;
+}
+
 export async function createEnemy(params: CreateEnemyParams) {
     if (params.random) {
+        console.log("Generating random enemy");
+
         let enemy = await generateRandomEnemy();
 
+        console.log("Generating image");
+
         let imagePrompt = getImagePrompt(enemy);
         let image = await generateImage(imagePrompt);
 
+        console.log("Uploading image")
+
         let imageBlob = await uploadImage(image);
 
-        return {
+        let enemyInfo = {
+            type: "random",
             name: enemy.name,
             description: enemy.description,
             imageUrl: imageBlob.url
         };
+
+        console.log("Writing to database");
+
+        await writeEnemyToDb(enemyInfo);
+
+        return enemyInfo;
 
     } else {
+        console.log("Generating enemy from description");
+
         let enemy = await generateEnemyFromDescription(params.description);
+
+        console.log("Generating image");
 
         let imagePrompt = getImagePrompt(enemy);
         let image = await generateImage(imagePrompt);
 
+        console.log("Uploading image")
+
         let imageBlob = await uploadImage(image);
 
-        return {
+        let enemyInfo = {
+            type: "custom",
             name: enemy.name,
             description: enemy.description,
             imageUrl: imageBlob.url
         };
+
+        console.log("Writing to database");
+
+        await writeEnemyToDb(enemyInfo);
+
+        return enemyInfo;
     }
 }
 
