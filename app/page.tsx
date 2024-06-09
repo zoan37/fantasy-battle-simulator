@@ -561,10 +561,37 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     // copy link to clipboard
     navigator.clipboard.writeText(link).then(() => {
       // pass
+      showTooltip('copyButton');
     }).catch(err => {
       console.error('Failed to copy link:', err);
     });
   };
+
+  let copyButtonTimeout: NodeJS.Timeout | null = null;
+
+  function showTooltip(buttonId: string) {
+    const button = document.getElementById(buttonId)!;
+    const tooltip = button.querySelector('#tooltip')!;
+    tooltip.classList.remove('hidden');
+
+    if (copyButtonTimeout) {
+      clearTimeout(copyButtonTimeout);
+    }
+
+    copyButtonTimeout = setTimeout(() => {
+      tooltip.classList.add('hidden');
+    }, 2000); // Hide tooltip after 2 seconds
+  }
+
+  const hideTooltip = (buttonId: string) => {
+    const button = document.getElementById(buttonId)!;
+    const tooltip = button.querySelector('#tooltip')!;
+    tooltip.classList.add('hidden');
+
+    if (copyButtonTimeout) {
+      clearTimeout(copyButtonTimeout);
+    }
+  }
 
   const fetchOpenRouterResponseWithInput = async (input: string) => {
     try {
@@ -767,15 +794,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       fadeOutAndChangeMusic(newTheme, 500);
     }
   };
-
-  function showTooltip(buttonId: string) {
-    const button = document.getElementById(buttonId)!;
-    const tooltip = button.querySelector('#tooltip')!;
-    tooltip.classList.remove('hidden');
-    setTimeout(() => {
-      tooltip.classList.add('hidden');
-    }, 2000); // Hide tooltip after 2 seconds
-  }
 
   return (
     <>
@@ -981,7 +999,11 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               <button onClick={exitBattle} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1">
                 Return Home
               </button>
-              <button id="copyButton" onClick={() => { handleBattlePreviewCopyEnemyLink(); showTooltip('copyButton'); }} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1 relative">
+              <button 
+                id="copyButton" 
+                onClick={() => { handleBattlePreviewCopyEnemyLink(); }} 
+                onMouseLeave={() => hideTooltip('copyButton')}
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1 relative">
                 Copy Enemy Link
                 <div id="tooltip" className="hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
                   <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
