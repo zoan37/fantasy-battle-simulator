@@ -16,6 +16,8 @@
     "@vercel/postgres": "^0.8.0",
     "ai": "^3.1.30",
     "drizzle-orm": "^0.31.2",
+    "flowbite": "^2.3.0",
+    "flowbite-react": "^0.9.0",
     "js-cookie": "^3.0.5",
     "next": "14.2.3",
     "react": "^18.3.1",

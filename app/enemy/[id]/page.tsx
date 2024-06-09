@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from 'react';
-import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation';
 import { Analytics } from '@vercel/analytics/react';
 
 export default function Page({ params }: { params: { id: string } }) {

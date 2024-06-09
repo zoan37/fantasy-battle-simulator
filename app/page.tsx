@@ -30,6 +30,8 @@ type Message = {
 
 // TODO: button for easy sharing of enemy
 
+// TODO: use prod API keys for OpenRouter and Fal
+
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -51,8 +53,10 @@ export default function Home() {
   const [isAudioMuted, setIsAudioMuted] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBattleLogModalOpen, setIsBattleLogModalOpen] = useState(false);
 
   const [imageUrl, setImageUrl] = useState('');
+  const [enemyHash, setEnemyHash] = useState('');
   const [enemyName, setEnemyName] = useState('');
   const [enemyDescription, setEnemyDescription] = useState('');
   const [userInput, setUserInput] = useState(''); // State to hold user input
@@ -67,6 +71,9 @@ export default function Home() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // Function to retrieve enemies from battle log
+  const [battleLog, setBattleLog] = useState([]);
+
   const EPIC_CONFRONTATION_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3';
   const INTO_THE_FLAMES_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Into%20the%20Flames-VQJVdTSO9Pmb2t4nPsLdGgQPWgHReh.mp3';
   const TRIUMPH_OF_LEGENDS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Triumph%20of%20Legends-HrF2MfygLBNMWgvdTI5tW8EP48KkWK.mp3';
@@ -77,6 +84,18 @@ export default function Home() {
   useEffect(() => {
     Cookies.set('defaultBattleTheme', defaultBattleTheme, { expires: 360 }); // Expires in 360 days
   }, [defaultBattleTheme]);
+
+  useEffect(() => {
+    const storedBattleLog = JSON.parse(localStorage.getItem('battleLog') || '[]');
+    setBattleLog(storedBattleLog);
+  }, []);
+
+  useEffect(() => {
+    // clear url of search params (specifically ?enemy=)
+    const url = new URL(window.location.href);
+    url.searchParams.delete('enemy');
+    window.history.replaceState({}, '', url.toString());
+  }, [])
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -129,7 +148,8 @@ export default function Home() {
     const fetchEnemy = async () => {
       if (enemyIdParam) {
         try {
-          const enemyResult = await getEnemy(enemyIdParam);
+          const hash = enemyIdParam;
+          const enemyResult = await getEnemy(hash);
 
           console.log(enemyResult);
 
@@ -140,6 +160,7 @@ export default function Home() {
           } else {
             setIsEnemyLoaded(true);
 
+            setEnemyHash(hash);
             setEnemyName(enemy.name);
             setEnemyDescription(enemy.description);
             setImageUrl(enemy.imageUrl);
@@ -157,6 +178,23 @@ export default function Home() {
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
+    document.body.style.overflow = isModalOpen ? "auto" : "hidden";
+
+    // Ensure the entire modal is scrollable
+    /*
+    const modalContainer = document.querySelector('.modal-container') as HTMLElement;
+    if (modalContainer) {
+      modalContainer.style.overflow = isModalOpen ? 'hidden' : 'auto';
+      modalContainer.style.maxHeight = '100vh'; // Allows scrolling within the full view height
+    } else {
+      console.error("Modal container not found");
+    }
+    */
+  };
+
+  const toggleBattleLogModal = () => {
+    setIsBattleLogModalOpen(!isBattleLogModalOpen);
+    document.body.style.overflow = isBattleLogModalOpen ? "auto" : "hidden";
   };
 
   const handleStartClick = () => {
@@ -234,6 +272,14 @@ export default function Home() {
   // start startEnemyPreviewBattle
   const startEnemyPreviewBattle = () => {
     setShowEnemyPreview(false);
+
+    // Store enemy in battle log
+    storeEnemyInBattleLog({
+      hash: enemyHash,
+      name: enemyName,
+      description: enemyDescription,
+      imageUrl: imageUrl,
+    });
 
     startBattle(enemyName, enemyDescription);
   };
@@ -456,6 +502,45 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     prompt: string;
   };
 
+  interface Enemy {
+    hash: string;
+    name: string;
+    description: string;
+    imageUrl: string;
+  }
+
+  const storeEnemyInBattleLog = (enemy: Enemy) => {
+    const { hash, name, description, imageUrl } = enemy;
+    const logTime = new Date().toISOString();
+    const battleLog = JSON.parse(localStorage.getItem('battleLog') || '[]');
+    battleLog.push({ hash, name, description, imageUrl, logTime });
+    localStorage.setItem('battleLog', JSON.stringify(battleLog));
+
+    setBattleLog(battleLog);
+  };
+
+  const handleSummonClickInBattleLog = (enemy: Enemy) => {
+    console.log('handleSummonClickInBattleLog');
+    console.log(enemy);
+
+    const hash = enemy.hash;
+
+    window.location.href = `/enemy/${hash}`;
+  };
+
+  const handleCopyLinkClickInBattleLog = (enemy: Enemy) => {
+    console.log('handleCopyLinkClickInBattleLog');
+    console.log(enemy);
+
+    // get current url prefix, e.g. "http://localhost:3000", an append "/enemy/" + enemy.hash
+    // Get the base URL correctly, including subdirectories if any
+    const urlPrefix = `${window.location.origin}${window.location.pathname}`;
+    const link = urlPrefix + `enemy/${enemy.hash}`;
+
+    // copy link to clipboard
+    navigator.clipboard.writeText(link);
+  };
+
   const fetchOpenRouterResponseWithInput = async (input: string) => {
     try {
       const userDescription = input.trim();
@@ -472,15 +557,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       const name = enemy.name;
       const description = enemy.description;
       const imageUrl = enemy.imageUrl;
-      const enemyHash = enemy.hash;
+      const hash = enemy.hash;
 
-      console.log('Enemy hash:', enemyHash);
-
-      // TODO: store enemy in battle log
+      console.log('Enemy hash:', hash);
 
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
+      setEnemyHash(hash);
       setEnemyName(name);
       setEnemyDescription(description);
 
@@ -488,6 +572,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       console.log(imageUrl);
 
       setImageUrl(imageUrl);
+
+      // Store enemy in battle log
+      storeEnemyInBattleLog(enemy);
 
       startBattle(name, description);
 
@@ -514,15 +601,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       const name = enemy.name;
       const description = enemy.description;
       const imageUrl = enemy.imageUrl;
-      const enemyHash = enemy.hash;
+      const hash = enemy.hash;
 
-      console.log('Enemy hash:', enemyHash);
-
-      // TODO: store enemy in battle log
+      console.log('Enemy hash:', hash);
 
       // log the name and description
       console.log("Name:", name);
       console.log("Description:", description);
+      setEnemyHash(hash);
       setEnemyName(name);
       setEnemyDescription(description);
 
@@ -530,6 +616,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
       console.log(imageUrl);
 
       setImageUrl(imageUrl);
+
+      // Store enemy in battle log
+      storeEnemyInBattleLog(enemy);
 
       startBattle(name, description);
 
@@ -665,7 +754,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
           </button>
-          <button className="p-1">
+          <button className="p-1" onClick={toggleBattleLogModal}>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
             </svg>
@@ -685,42 +774,89 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
         {isModalOpen && (
           <div
-            className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-5"
+            className="modal-background-overlay overflow-auto fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-5"
             onClick={toggleModal} // This handles clicks on the backdrop
           >
             <div
-              className="bg-white p-5 rounded-lg max-w-screen-md"
+              className="modal-container bg-white p-5 rounded-lg max-w-screen-md"
               onClick={(e) => e.stopPropagation()} // This prevents clicks inside the modal from closing it
             >
               <h2 className="text-lg font-bold mb-4">Settings</h2>
-              <div className="mb-4">
-                <label htmlFor="battleTheme" className="block mb-2 text-sm font-medium text-gray-900">Default Battle Theme:</label>
-                <select
-                  id="battleTheme"
-                  value={defaultBattleTheme}
-                  onChange={(e) => changeBattleTheme(e.target.value)}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                >
-                  <option value={EPIC_CONFRONTATION_BATTLE_THEME}>Epic Confrontation</option>
-                  <option value={INTO_THE_FLAMES_BATTLE_THEME}>Into the Flames</option>
-                  <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
-                  <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
-                  <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
-                </select>
-              </div>
-              <hr className="mb-4" />
-              <div className="mb-4">
-                Fantasy Battle Simulator lets you battle an enemy of your imagination or a random one. You are the Hero in a fantasy world, where you are blessed with an overpowered magic system named Echo.
-                Echo has a vast knowledge of spells, and can help analyze the battle situation and provide actions.
-              </div>
-              <div className="mb-4">
-                The battle log records the enemies you've encountered. Share an enemy with a link.
-              </div>
-              <div className="mb-4">
-                Made by <a href="https://x.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
+              <div>
+                <div className="mb-4">
+                  <label htmlFor="battleTheme" className="block mb-2 text-sm font-medium text-gray-900">Default Battle Theme:</label>
+                  <select
+                    id="battleTheme"
+                    value={defaultBattleTheme}
+                    onChange={(e) => changeBattleTheme(e.target.value)}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  >
+                    <option value={EPIC_CONFRONTATION_BATTLE_THEME}>Epic Confrontation</option>
+                    <option value={INTO_THE_FLAMES_BATTLE_THEME}>Into the Flames</option>
+                    <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
+                    <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
+                    <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
+                  </select>
+                </div>
+                <hr className="mb-4" />
+                <div className="mb-4">
+                  Fantasy Battle Simulator lets you battle an enemy of your imagination or a random one. You are the Hero in a fantasy world, where you are blessed with an overpowered magic system named Echo.
+                  Echo has a vast knowledge of spells, and can help analyze the battle situation and provide actions.
+                </div>
+                <div className="mb-4">
+                  The battle log records the enemies you've encountered. Share an enemy with a link.
+                </div>
+                <div className="mb-4">
+                  Made by <a href="https://x.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
+                </div>
               </div>
               <div className="text-right">
                 <button onClick={toggleModal} className="mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isBattleLogModalOpen && (
+          <div
+            className="modal-background-overlay overflow-auto fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-5"
+            onClick={toggleBattleLogModal} // This handles clicks on the backdrop
+          >
+            <div
+              className="modal-container bg-white p-5 rounded-lg max-w-screen-md"
+              onClick={(e) => e.stopPropagation()} // This prevents clicks inside the modal from closing it
+            >
+              <h2 className="text-lg font-bold mb-2">Battle Log</h2>
+              <div>
+                <div className="text-sm text-gray-600 mb-4">
+                  Enemies encountered in battle by recency. Enemy links are shareable to the public.
+                </div>
+                <div 
+                  className="battle-log-container overflow-y-auto max-h-[70vh]"
+                  style={{border: '1px solid #ccc', padding: '15px'}}
+                >
+                  {battleLog.length > 0 ? (
+                    <ul>
+                      {[...battleLog].reverse().map((enemy: { hash: string, name: string, description: string, imageUrl: string }, index) => (
+                        <li key={index} className="mb-2">
+                          <div className="enemy-info">
+                            <img src={enemy.imageUrl} alt={enemy.name} style={{ width: '64px', height: '64px' }} />
+                            {enemy.name}
+                            <button className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleSummonClickInBattleLog(enemy)}>Summon</button>
+                            <button className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleCopyLinkClickInBattleLog(enemy)}>Copy Link</button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No battles logged yet.</p>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                <button onClick={toggleBattleLogModal} className="mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                   Close
                 </button>
               </div>
@@ -807,6 +943,15 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
         {showBattle && (
           <>
+            <div className="flex justify-center mb-4">
+              <button onClick={exitBattle} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-1">
+                Exit Battle
+              </button>
+              <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-1">
+                Copy Enemy Link
+              </button>
+            </div>
+
             {imageUrl && (
               <Image
                 src={imageUrl}
