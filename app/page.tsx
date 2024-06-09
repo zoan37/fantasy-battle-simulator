@@ -701,80 +701,87 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     console.log('messages');
     console.log(messages);
 
+    const SSE_COMMENT = ": OPENROUTER PROCESSING";
+
     const stream = new ReadableStream({
       async start(controller: ReadableStreamDefaultController) {
         try {
-          let isStreamed = false;
-
           const { output } = await getBattleChatResponseStream(messages);
 
           if (output) {
             try {
+              // Using more robust parser that buffers until double new-line delimiter:
+              // https://community.openai.com/t/stream-response-from-v1-chat-completions-endpoint-is-missing-the-first-token/187835/9
+              // This is to help handle case where chunk only has partial JSON.
+              let buffer = new Uint8Array(512);
+              let bufferIdx = 0;
+              const encoder = new TextEncoder();
+              const decoder = new TextDecoder();
+
               for await (const chunk of readStreamableValue(output)) {
-                if (chunk) {
-                  // console.log('value');
-                  // console.log(value);
+                if (!chunk) {
+                  continue;
+                }
 
-                  // Assuming the stream is text, convert the Uint8Array to a string
-                  // let chunk = new TextDecoder().decode(value);
-                  // Process the chunk here (e.g., append it to the controller for streaming to the client)
-                  // console.log(chunk); // Or handle the chunk as needed
+                // encode chunk into Uint8Array array
+                const value = encoder.encode(chunk);
 
-                  // split the chunk into lines
-                  let lines = chunk.split('\n');
-                  // console.log('lines');
-                  // console.log(lines);
+                for (let i = 0; i < value.byteLength; ++i) {
+                  buffer[bufferIdx++] = value[i];
 
-                  const SSE_COMMENT = ": OPENROUTER PROCESSING";
+                  // Ensure buffer has space or resize it
+                  // Tested this code by setting buffer length to 1
+                  if (bufferIdx === buffer.length) {
+                    const newBuffer = new Uint8Array(buffer.length * 2);
+                    newBuffer.set(buffer);
+                    buffer = newBuffer;
+                  }
 
+                  // Check for double new-line delimiter
+                  if (bufferIdx >= 2 && value[i] === 10 && buffer[bufferIdx - 2] === 10) {
+                    const lineBuffer = buffer.subarray(0, bufferIdx - 2);
+                    const line = decoder.decode(lineBuffer);
 
-                  // filter out lines that start with SSE_COMMENT
-                  lines = lines.filter((line) => !line.trim().startsWith(SSE_COMMENT));
+                    if (line.startsWith("data: ")) {
+                      const dataStr = line.substring(6);
 
-                  // filter out lines that end with "data: [DONE]"
-                  lines = lines.filter((line) => !line.trim().endsWith("data: [DONE]"));
+                      if (dataStr === '[DONE]') {
+                        controller.close();
+                        break;
+                      }
 
-                  // Filter out empty lines and lines that do not start with "data:"
-                  const dataLines = lines.filter(line => line.startsWith("data:"));
+                      try {
+                        // console.log('dataStr');
+                        // console.log(dataStr);
 
-                  // Extract and parse the JSON from each data line
-                  const messages = dataLines.map(line => {
-                    // Remove the "data: " prefix and parse the JSON
-                    const jsonStr = line.substring(5); // "data: ".length == 5
-                    try {
-                      return JSON.parse(jsonStr);
-                    } catch (e) {
-                      console.log("Failed to parse jsonStr:");
-                      console.log(jsonStr)
+                        const dataObj = JSON.parse(dataStr);
 
-                      console.log("Source dataLines:");
-                      console.log(dataLines);
+                        // console.log('dataObj');
+                        // console.log(dataObj);
 
-                      console.log("Source chunk:");
-                      console.log(chunk);
+                        const content = dataObj.choices[0].delta.content;
 
-                      throw e;
+                        controller.enqueue(content);
+                      } catch (e) {
+                        console.error(e);
+                        console.log('Error while JSON parsing dataStr:', dataStr);
+                        // controller.error(e);
+                        // break;
+                      }
+                    } else if (line.startsWith(SSE_COMMENT)) {
+                      // pass
+                    } else {
+                      console.error('Expected "data:" prefix in:', line);
                     }
-                  });
 
-                  // loop through messages and enqueue them to the controller
-                  messages.forEach((message) => {
-                    const content = message.choices[0].delta.content;
-                    // console.log(content);
-                    controller.enqueue(content);
-                  });
-
-                  isStreamed = true;
+                    // Reset buffer index for new data
+                    bufferIdx = 0;
+                  }
                 }
               }
             } catch (error) {
               console.error('Error reading the stream', error);
             }
-          }
-
-          // handle case where streaming is not supported
-          if (!isStreamed) {
-            console.error('Streaming not supported! Need to handle this case.');
           }
         } catch (error) {
           controller.error(error);
@@ -828,10 +835,12 @@ A battle may be over, but never end the simulation; the user is allowed to conti
           <div
             className="modal-background-overlay overflow-auto fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-5"
             onClick={toggleModal} // This handles clicks on the backdrop
+            style={{ zIndex: 1000 }} // Higher z-index for the overlay
           >
             <div
               className="modal-container bg-white p-5 rounded-lg max-w-screen-md"
               onClick={(e) => e.stopPropagation()} // This prevents clicks inside the modal from closing it
+              style={{ zIndex: 1001 }} // Even higher z-index for the modal itself
             >
               <h2 className="text-lg font-bold mb-4">Settings</h2>
               <div>
@@ -875,10 +884,12 @@ A battle may be over, but never end the simulation; the user is allowed to conti
           <div
             className="modal-background-overlay overflow-auto fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-5"
             onClick={toggleBattleLogModal} // This handles clicks on the backdrop
+            style={{ zIndex: 1000 }} // Higher z-index for the overlay
           >
             <div
               className="modal-container bg-white p-5 rounded-lg max-w-screen-md"
               onClick={(e) => e.stopPropagation()} // This prevents clicks inside the modal from closing it
+              style={{ zIndex: 1001 }} // Even higher z-index for the modal itself
             >
               <h2 className="text-lg font-bold mb-2">Battle Log</h2>
               <div>
@@ -999,9 +1010,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               <button onClick={exitBattle} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1">
                 Return Home
               </button>
-              <button 
-                id="copyButton" 
-                onClick={() => { handleBattlePreviewCopyEnemyLink(); }} 
+              <button
+                id="copyButton"
+                onClick={() => { handleBattlePreviewCopyEnemyLink(); }}
                 onMouseLeave={() => hideTooltip('copyButton')}
                 className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1 relative">
                 Copy Enemy Link

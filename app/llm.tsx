@@ -136,6 +136,7 @@ export async function getBattleChatResponseStream(messages: Message[]) {
                 },
                 body: JSON.stringify({
                     "model": "meta-llama/llama-3-70b-instruct:nitro",
+                    //"model": "openai/gpt-3.5-turbo",
                     "messages": messages,
                     "temperature": 1.0,
                     "stream": true,
@@ -156,7 +157,13 @@ export async function getBattleChatResponseStream(messages: Message[]) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
+                    // NOTE: This code assumes that the value is a valid UTF-8 encoded string.
+                    // It won't handle the case where the last byte of value was meant to be paired up with 
+                    // the first byte of the next incoming value.
                     let chunk = new TextDecoder().decode(value);
+
+                    // console.log('chunk:');
+                    // console.log(chunk);
 
                     stream.update(chunk);
                 }
