@@ -28,7 +28,15 @@ export async function generateImage(prompt: string) {
     }
 
     // Call FAL to generate the image
-    const result: ResultType = await fal.subscribe("fal-ai/fast-sdxl", {
+
+    // use fast-sdxl as it's higher quality
+    // also, fast-lightning-sdxl doesn't appear to handle negatives
+    // source: https://www.reddit.com/r/StableDiffusion/comments/1ax4col/i_compared_the_generation_results_of/
+    const imageModel = "fal-ai/fast-sdxl";
+
+    // const imageModel = "fal-ai/fast-lightning-sdxl";
+
+    const result: ResultType = await fal.subscribe(imageModel, {
         input: {
             prompt: prompt,
             negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, duplicates. signature, watermark. cartoon, illustration, animation."
