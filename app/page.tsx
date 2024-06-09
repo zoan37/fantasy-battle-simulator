@@ -22,16 +22,6 @@ type Message = {
   content: string;
 };
 
-// TODO: store local history of prompts you've used, in case you want to re-use
-
-// TODO: fix music stops playing after close laptop screen, and reopen
-
-// TODO: back button exit battle early. should pop up alert for confirmation.
-
-// TODO: button for easy sharing of enemy
-
-// TODO: use prod API keys for OpenRouter and Fal
-
 // TODO: when returning home, if battle in progress, pop up modal confirming if want to exit
 
 export default function Home() {
