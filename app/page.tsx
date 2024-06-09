@@ -26,6 +26,10 @@ type Message = {
 
 // TODO: when returning home, if battle in progress, pop up modal confirming if want to exit
 
+// TODO: start battle button hard to click on mobile safari
+
+// TODO: fal ai sometimes shows black image (maybe nsfw filter?)
+
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -65,8 +69,14 @@ export default function Home() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to retrieve enemies from battle log
   const [battleLog, setBattleLog] = useState([]);
+
+  interface PromptInfo {
+    description: string;
+    timestamp: Date;
+  }
+
+  const [enemyPromptHistory, setEnemyPromptHistory] = useState<PromptInfo[]>([]);
 
   const EPIC_CONFRONTATION_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Epic%20Confrontation-nTKBHqlteFFcFJ1j5U8Pw8k3cMcDmt.mp3';
   const INTO_THE_FLAMES_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Into%20the%20Flames-VQJVdTSO9Pmb2t4nPsLdGgQPWgHReh.mp3';
@@ -82,6 +92,12 @@ export default function Home() {
   useEffect(() => {
     const storedBattleLog = JSON.parse(localStorage.getItem('battleLog') || '[]');
     setBattleLog(storedBattleLog);
+  }, []);
+
+  // Load enemy prompt history from local storage
+  useEffect(() => {
+    const storedPromptHistory = JSON.parse(localStorage.getItem('enemyPromptHistory') || '[]');
+    setEnemyPromptHistory(storedPromptHistory);
   }, []);
 
   useEffect(() => {
@@ -483,6 +499,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
   // Example asdf function
   const generateCustomEnemy = (input: string) => {
+    const promptInfo = {
+      description: input,
+      timestamp: new Date()
+    }
+
+    // Store the prompt used to generate the enemy
+    storeEnemyPromptInHistory(promptInfo);
+
     console.log("Function generateCustomEnemy called with input:", input);
     // You can add more logic here to process the input
     fetchOpenRouterResponseWithInput(input);
@@ -514,6 +538,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
     setBattleLog(battleLog);
   };
+
+  const storeEnemyPromptInHistory = (promptInfo: PromptInfo) => {
+    const storedPromptHistory = JSON.parse(localStorage.getItem('enemyPromptHistory') || '[]');
+    storedPromptHistory.push(promptInfo);
+    localStorage.setItem('enemyPromptHistory', JSON.stringify(storedPromptHistory));
+
+    setEnemyPromptHistory(storedPromptHistory);
+  }
 
   const handleSummonClickInBattleLog = (enemy: Enemy) => {
     console.log('handleSummonClickInBattleLog');
@@ -852,6 +884,24 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                     <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
                     <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
                   </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
+                  <div 
+                    className="enemy-prompt-history-container overflow-y-auto max-h-[70vh] max-h-[70svh]"
+                    style={{ border: '1px solid #ccc', padding: '15px' }}>
+                    {enemyPromptHistory.length > 0 ? (
+                      <ul>
+                        {[...enemyPromptHistory].reverse().map((promptInfo, index) => (
+                          <li key={index} className="mb-2">
+                            {promptInfo.description}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No enemy prompt history yet.</p>
+                    )}
+                  </div>
                 </div>
                 <hr className="mb-4" />
                 <div className="mb-4">

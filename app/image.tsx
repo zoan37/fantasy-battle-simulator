@@ -36,10 +36,15 @@ export async function generateImage(prompt: string) {
 
     // const imageModel = "fal-ai/fast-lightning-sdxl";
 
+    // disable safety checker because sometimes there are false positives where has_nsfw_concepts == true, and get black image.
+    // log in this case: "Potential NSFW content was detected in one or more images. A black image will be returned instead. Try again with a different prompt and/or seed."
+    // the prompt will be safe because it comes from gpt-3.5-turbo output.
+
     const result: ResultType = await fal.subscribe(imageModel, {
         input: {
             prompt: prompt,
-            negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, duplicates. signature, watermark. cartoon, illustration, animation."
+            negative_prompt: "blood, gore, nsfw, scary, ugly, deformed, morbid, mutilated, extra limbs, duplicates. signature, watermark. cartoon, illustration, animation.",
+            enable_safety_checker: false
         },
         logs: true,
         onQueueUpdate: (status: fal.QueueStatus) => {

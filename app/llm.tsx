@@ -107,6 +107,12 @@ export async function generateEnemyFromDescription(userDescription: string): Pro
         }
 
         const data = await response.json();
+
+        if (data.error) {
+            console.error("Error fetching from OpenRouter:", data.error.message, data.error.code);
+            throw new Error(data.error.message);
+        }
+
         const messageContent = data.choices[0].message.content;
 
         return parseEnemyResponseContent(messageContent);
