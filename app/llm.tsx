@@ -204,11 +204,13 @@ function parseImageNameFromUrl(url: string) {
     return imageName;
 }
 
+const ENEMIES_FOLDER = "enemies";
+
 // async function to upload image
-async function uploadImage(image: { imageUrl: string }) {
+async function uploadEnemyImage(image: { imageUrl: string }) {
     const imageName = parseImageNameFromUrl(image.imageUrl);
     const imageData = await fetch(image.imageUrl).then(r => r.blob());
-    const blob = await put(imageName, imageData, {
+    const blob = await put(`${ENEMIES_FOLDER}/${imageName}`, imageData, {
         access: 'public',
     });
     return blob;
@@ -247,7 +249,7 @@ export async function createEnemy(params: CreateEnemyParams) {
 
         console.log("Uploading image")
 
-        let imageBlob = await uploadImage(image);
+        let imageBlob = await uploadEnemyImage(image);
 
         let enemyInfo = {
             type: "random",
@@ -281,7 +283,7 @@ export async function createEnemy(params: CreateEnemyParams) {
 
         console.log("Uploading image")
 
-        let imageBlob = await uploadImage(image);
+        let imageBlob = await uploadEnemyImage(image);
 
         let enemyInfo = {
             type: "custom",
