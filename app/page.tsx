@@ -968,11 +968,11 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
         {(showBattle || showEnemyPreview) && (
           <>
-            <div className="flex justify-center mb-4">
-              <button onClick={exitBattle} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-1">
+            <div className="flex justify-center mb-5">
+              <button onClick={exitBattle} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1">
                 Return Home
               </button>
-              <button onClick={handleBattlePreviewCopyEnemyLink} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded m-1">
+              <button onClick={handleBattlePreviewCopyEnemyLink} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1">
                 Copy Enemy Link
               </button>
             </div>
@@ -1101,7 +1101,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 )}
 
                 <div className="mt-4">
-                  <button onClick={startEnemyPreviewBattle} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
+                  <button onClick={startEnemyPreviewBattle} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
                     Start Battle
                   </button>
                 </div>
