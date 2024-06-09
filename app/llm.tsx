@@ -1,6 +1,20 @@
 "use server"
 
 import { createStreamableValue } from 'ai/rsc';
+import { generateImage } from './image';
+import { put } from '@vercel/blob';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/vercel-postgres';
+import { sql } from '@vercel/postgres';
+import * as schema from '../drizzle/schema';
+import Sqids from "sqids";
+
+const db = drizzle(sql, { schema })
+import { EnemiesTable } from '../drizzle/schema';
+
+const sqids = new Sqids({
+    minLength: 8
+});
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const YOUR_SITE_URL = "https://fantasy-battle-simulator.vercel.app/";
@@ -30,7 +44,7 @@ const parseEnemyResponseContent = (messageContent: string) => {
  * @returns {Promise<{name: string, description: string}>} The name and description of the generated enemy.
  */
 export async function generateRandomEnemy() {
-    const prompt = "Generate a random enemy in a fantasy world. No spiders as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
+    const prompt = "Generate a random enemy in a fantasy world. No spiders or arachnids as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
 
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -122,6 +136,7 @@ export async function getBattleChatResponseStream(messages: Message[]) {
                 },
                 body: JSON.stringify({
                     "model": "meta-llama/llama-3-70b-instruct:nitro",
+                    //"model": "openai/gpt-3.5-turbo",
                     "messages": messages,
                     "temperature": 1.0,
                     "stream": true,
@@ -142,7 +157,13 @@ export async function getBattleChatResponseStream(messages: Message[]) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
+                    // NOTE: This code assumes that the value is a valid UTF-8 encoded string.
+                    // It won't handle the case where the last byte of value was meant to be paired up with 
+                    // the first byte of the next incoming value.
                     let chunk = new TextDecoder().decode(value);
+
+                    // console.log('chunk:');
+                    // console.log(chunk);
 
                     stream.update(chunk);
                 }
@@ -162,3 +183,159 @@ export async function getBattleChatResponseStream(messages: Message[]) {
         throw error;
     }
 }
+
+function getImagePrompt(enemy: { name: string; description: string }) {
+    return enemy.name + ': ' + enemy.description;
+}
+
+// function to create an enemy, with parameters random boolean or user description
+interface CreateEnemyParams {
+    random: boolean;
+    description: string;
+}
+
+// function to parse image name from url
+// e.g. https://fal.media/files/rabbit/7_iD9sPgq1EweJfxerKB5.jpeg&w=1080&q=75 -> 7_iD9sPgq1EweJfxerKB5.jpeg
+function parseImageNameFromUrl(url: string) {
+    const imageName = url.split('/').pop()?.split('&')[0];
+    if (!imageName) {
+        throw new Error("Image name could not be parsed from URL.");
+    }
+    return imageName;
+}
+
+const ENEMIES_FOLDER = "enemies";
+
+// async function to upload image
+async function uploadEnemyImage(image: { imageUrl: string }) {
+    const imageName = parseImageNameFromUrl(image.imageUrl);
+    const imageData = await fetch(image.imageUrl).then(r => r.blob());
+    const blob = await put(`${ENEMIES_FOLDER}/${imageName}`, imageData, {
+        access: 'public',
+    });
+    return blob;
+}
+
+interface WriteEnemyResult {
+    id: number;
+    // include other properties if there are more
+}
+
+// async function to write enemy to Enemies table
+async function writeEnemyToDb(enemy: { type: string, name: string; description: string; imageUrl: string }): Promise<WriteEnemyResult> {
+    // insert enemy into Enemies table, with db
+    const result = await db.insert(EnemiesTable).values({
+        type: enemy.type,
+        name: enemy.name,
+        description: enemy.description,
+        imageUrl: enemy.imageUrl
+    }).returning({
+        id: EnemiesTable.id
+    });
+
+    return result[0];
+}
+
+export async function createEnemy(params: CreateEnemyParams) {
+    if (params.random) {
+        console.log("Generating random enemy");
+
+        let enemy = await generateRandomEnemy();
+
+        console.log("Generating image");
+
+        let imagePrompt = getImagePrompt(enemy);
+        let image = await generateImage(imagePrompt);
+
+        console.log("Uploading image")
+
+        let imageBlob = await uploadEnemyImage(image);
+
+        let enemyInfo = {
+            type: "random",
+            name: enemy.name,
+            description: enemy.description,
+            imageUrl: imageBlob.url,
+            hash: ""
+        };
+
+        console.log("Writing to database");
+
+        const writeResult = await writeEnemyToDb(enemyInfo);
+        const enemyId = writeResult.id;
+        const enemyHash = sqids.encode([enemyId]);
+
+        enemyInfo.hash = enemyHash;
+
+        console.log('Enemy hash:', enemyHash);
+
+        return enemyInfo;
+
+    } else {
+        console.log("Generating enemy from description");
+
+        let enemy = await generateEnemyFromDescription(params.description);
+
+        console.log("Generating image");
+
+        let imagePrompt = getImagePrompt(enemy);
+        let image = await generateImage(imagePrompt);
+
+        console.log("Uploading image")
+
+        let imageBlob = await uploadEnemyImage(image);
+
+        let enemyInfo = {
+            type: "custom",
+            name: enemy.name,
+            description: enemy.description,
+            imageUrl: imageBlob.url,
+            hash: ""
+        };
+
+        console.log("Writing to database");
+
+        const writeResult = await writeEnemyToDb(enemyInfo);
+        const enemyId = writeResult.id;
+        const enemyHash = sqids.encode([enemyId]);
+
+        enemyInfo.hash = enemyHash;
+
+        console.log('Enemy hash:', enemyHash);
+
+        return enemyInfo;
+    }
+}
+
+// TODO: use sqid for enemy id hash
+
+// Function to retrieve an enemy from the database by its name
+export async function getEnemy(enemyHash: string) {
+    const numbers = sqids.decode(enemyHash);
+    const enemyId = numbers[0];
+
+    try {
+        // don't expose id
+        const result = await db.select({
+            name: EnemiesTable.name,
+            description: EnemiesTable.description,
+            imageUrl: EnemiesTable.imageUrl
+        })
+            .from(EnemiesTable)
+            .where(eq(EnemiesTable.id, enemyId));
+
+        if (result.length === 0) {
+            return {
+                enemy: null
+            }
+        }
+
+        return {
+            enemy: result[0]
+        }
+    } catch (error) {
+        console.error("Error retrieving enemy from database:", error);
+        throw error;
+    }
+}
+
