@@ -22,6 +22,8 @@ type Message = {
   content: string;
 };
 
+// TODO: store recent prompt history (e.g. really good prompt you want to save)
+
 // TODO: when returning home, if battle in progress, pop up modal confirming if want to exit
 
 export default function Home() {
@@ -889,7 +891,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   Enemies encountered in battle by recency. Enemy links are shareable to the public.
                 </div>
                 <div
-                  className="battle-log-container overflow-y-auto max-h-[70vh]"
+                  className="battle-log-container overflow-y-auto max-h-[70vh] max-h-[70svh]"
                   style={{ border: '1px solid #ccc', padding: '15px' }}
                 >
                   {battleLog.length > 0 ? (
