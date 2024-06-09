@@ -532,7 +532,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     window.location.href = `/?enemy=${hash}`;
   };
 
-  const handleCopyLinkClickInBattleLog = (enemy: Enemy) => {
+  const handleCopyLinkClickInBattleLog = (enemy: Enemy, buttonId: string) => {
     console.log('handleCopyLinkClickInBattleLog');
     console.log(enemy);
 
@@ -543,7 +543,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
     // copy link to clipboard
     navigator.clipboard.writeText(link).then(() => {
-      // pass
+      showTooltip(buttonId);
     }).catch(err => {
       console.error('Failed to copy link:', err);
     });
@@ -567,29 +567,31 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     });
   };
 
-  let copyButtonTimeout: NodeJS.Timeout | null = null;
+  let copyButtonTimeouts: { [buttonId: string]: NodeJS.Timeout } = {};
 
   function showTooltip(buttonId: string) {
+    console.log('showTooltip for buttonId:', buttonId);
+
     const button = document.getElementById(buttonId)!;
-    const tooltip = button.querySelector('#tooltip')!;
+    let tooltip = button.querySelector('.tooltip')!;
     tooltip.classList.remove('hidden');
 
-    if (copyButtonTimeout) {
-      clearTimeout(copyButtonTimeout);
+    if (copyButtonTimeouts[buttonId]) {
+      clearTimeout(copyButtonTimeouts[buttonId]);
     }
 
-    copyButtonTimeout = setTimeout(() => {
+    copyButtonTimeouts[buttonId] = setTimeout(() => {
       tooltip.classList.add('hidden');
     }, 2000); // Hide tooltip after 2 seconds
   }
 
   const hideTooltip = (buttonId: string) => {
     const button = document.getElementById(buttonId)!;
-    const tooltip = button.querySelector('#tooltip')!;
+    const tooltip = button.querySelector('.tooltip')!;
     tooltip.classList.add('hidden');
 
-    if (copyButtonTimeout) {
-      clearTimeout(copyButtonTimeout);
+    if (copyButtonTimeouts[buttonId]) {
+      clearTimeout(copyButtonTimeouts[buttonId]);
     }
   }
 
@@ -908,7 +910,17 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                             <img src={enemy.imageUrl} alt={enemy.name} style={{ width: '64px', height: '64px' }} />
                             {enemy.name}
                             <button className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleSummonClickInBattleLog(enemy)}>Summon</button>
-                            <button className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleCopyLinkClickInBattleLog(enemy)}>Copy Link</button>
+                            <button
+                              id={`copyButton-${enemy.hash}`}
+                              className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm relative"
+                              onClick={() => handleCopyLinkClickInBattleLog(enemy, `copyButton-${enemy.hash}`)}
+                              onMouseLeave={() => hideTooltip(`copyButton-${enemy.hash}`)}>
+                              Copy Link
+                              <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
+                                Copied!
+                              </div>
+                            </button>
                           </div>
                         </li>
                       ))}
@@ -1016,7 +1028,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 onMouseLeave={() => hideTooltip('copyButton')}
                 className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1 relative">
                 Copy Enemy Link
-                <div id="tooltip" className="hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
                   <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
                   Copied!
                 </div>
