@@ -536,6 +536,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   };
 
   const storeEnemyPromptInHistory = (promptInfo: PromptInfo) => {
+    // TODO: implement
+    return;
+
     const storedPromptHistory = JSON.parse(localStorage.getItem('enemyPromptHistory') || '[]');
     storedPromptHistory.push(promptInfo);
     localStorage.setItem('enemyPromptHistory', JSON.stringify(storedPromptHistory));
