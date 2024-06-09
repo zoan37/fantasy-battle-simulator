@@ -34,3 +34,8 @@ body {
     text-wrap: balance;
   }
 }
+
+.footer-padding {
+  /* allow enough for mobile safari navbar to not overlap too much with footer */
+  margin-bottom: 50px;
+}
