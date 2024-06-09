@@ -881,7 +881,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                     <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
                   </select>
                 </div>
-                <div className="mb-4">
+                <div className="mb-4 hidden">
                   <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
                   <div 
                     className="enemy-prompt-history-container overflow-y-auto max-h-[70vh] max-h-[70svh]"
