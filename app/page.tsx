@@ -26,8 +26,6 @@ type Message = {
 
 // TODO: when returning home, if battle in progress, pop up modal confirming if want to exit
 
-// TODO: start battle button hard to click on mobile safari
-
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -1003,7 +1001,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               Enter Portal
             </button>
 
-            <div className="mb-7">
+            <div className="footer-padding">
             </div>
           </>
         )}
@@ -1054,7 +1052,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
             )}
 
-            <div className="mb-7">
+            <div className="footer-padding">
             </div>
           </>
         )}
@@ -1150,7 +1148,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
             )}
 
-            <div className="mb-7">
+            <div className="footer-padding">
             </div>
           </>
         )}
@@ -1209,7 +1207,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </>
             )}
 
-            <div className="mb-7">
+            <div className="footer-padding">
             </div>
           </>
         )}
