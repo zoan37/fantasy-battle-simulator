@@ -44,7 +44,7 @@ const parseEnemyResponseContent = (messageContent: string) => {
  * @returns {Promise<{name: string, description: string}>} The name and description of the generated enemy.
  */
 export async function generateRandomEnemy() {
-    const prompt = "Generate a random enemy in a fantasy world. No spiders as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
+    const prompt = "Generate a random enemy in a fantasy world. No spiders or arachnids as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
 
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
