@@ -28,8 +28,6 @@ type Message = {
 
 // TODO: start battle button hard to click on mobile safari
 
-// TODO: fal ai sometimes shows black image (maybe nsfw filter?)
-
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -1004,6 +1002,9 @@ A battle may be over, but never end the simulation; the user is allowed to conti
             <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
               Enter Portal
             </button>
+
+            <div className="mb-7">
+            </div>
           </>
         )}
 
@@ -1053,7 +1054,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
             )}
 
-            <div className="mb-4">
+            <div className="mb-7">
             </div>
           </>
         )}
@@ -1149,7 +1150,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
             )}
 
-            <div className="mb-4">
+            <div className="mb-7">
             </div>
           </>
         )}
@@ -1208,7 +1209,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </>
             )}
 
-            <div className="mb-4">
+            <div className="mb-7">
             </div>
           </>
         )}
