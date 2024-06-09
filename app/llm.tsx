@@ -307,8 +307,6 @@ export async function createEnemy(params: CreateEnemyParams) {
     }
 }
 
-// TODO: use sqid for enemy id hash
-
 // Function to retrieve an enemy from the database by its name
 export async function getEnemy(enemyHash: string) {
     const numbers = sqids.decode(enemyHash);
