@@ -84,7 +84,7 @@ export async function generateRandomEnemy() {
 export async function generateEnemyFromDescription(userDescription: string): Promise<{ name: string, description: string }> {
     userDescription = userDescription.trim();
 
-    const prompt = "Based on the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. If the user provides a name for the enemy, try to respect the name provided it's not vulgar or bad language. Here is the user description:\n" + userDescription;
+    const prompt = "Based on the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. If the user provides a name for the enemy in the description, please use the name if it's not vulgar or bad language. Here is the user description:\n" + userDescription;
 
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -142,7 +142,6 @@ export async function getBattleChatResponseStream(messages: Message[]) {
                 },
                 body: JSON.stringify({
                     "model": "meta-llama/llama-3-70b-instruct:nitro",
-                    //"model": "openai/gpt-3.5-turbo",
                     "messages": messages,
                     "temperature": 1.0,
                     "stream": true,
