@@ -78,9 +78,8 @@ export default function Home() {
 
   const [battleLog, setBattleLog] = useState([]);
 
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
   const { isOpen: isOpen_Settings, onOpen: onOpen_Settings, onOpenChange: onOpenChange_Settings } = useDisclosure();
+  const { isOpen: isOpen_BattleLog, onOpen: onOpen_BattleLog, onOpenChange: onOpenChange_BattleLog } = useDisclosure();
 
   interface PromptInfo {
     description: string;
@@ -854,7 +853,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
               </svg>
             </button>
-            <button className="p-1" onClick={toggleBattleLogModal}>
+            <button className="p-1" onClick={onOpen_BattleLog}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-7">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
               </svg>
@@ -877,13 +876,13 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               isOpen={isOpen_Settings}
               onOpenChange={onOpenChange_Settings}
               scrollBehavior="outside"
-              size="lg">
+              size="xl">
               <ModalContent>
                 {(onClose) => (
                   <>
                     <ModalHeader className="flex flex-col gap-1">Settings</ModalHeader>
                     <ModalBody>
-                      <div className="mb-4">
+                      <div>
                         <label htmlFor="battleTheme" className="block mb-2 text-sm font-medium text-gray-900">Default Battle Theme:</label>
                         <select
                           id="battleTheme"
@@ -924,7 +923,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                       <div className="mb-4">
                         The battle log records the enemies you've encountered. Share an enemy with a link.
                       </div>
-                      <div className="mb-4">
+                      <div className="mb-0">
                         Made by <a href="https://x.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
                       </div>
                     </ModalBody>
@@ -941,62 +940,66 @@ A battle may be over, but never end the simulation; the user is allowed to conti
             </Modal>
           </div>
 
-          {isBattleLogModalOpen && (
-            <div
-              className="modal-background-overlay overflow-auto fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-5"
-              onClick={toggleBattleLogModal} // This handles clicks on the backdrop
-              style={{ zIndex: 1000 }} // Higher z-index for the overlay
-            >
-              <div
-                className="modal-container bg-white p-5 rounded-lg max-w-screen-md"
-                onClick={(e) => e.stopPropagation()} // This prevents clicks inside the modal from closing it
-                style={{ zIndex: 1001 }} // Even higher z-index for the modal itself
-              >
-                <h2 className="text-lg font-bold mb-2">Battle Log</h2>
-                <div>
-                  <div className="text-sm text-gray-600 mb-4">
-                    Enemies encountered in battle by recency. Enemy links are shareable to the public.
-                  </div>
-                  <div
-                    className="battle-log-container overflow-y-auto max-h-[70vh] max-h-[70svh]"
-                    style={{ border: '1px solid #ccc', padding: '15px' }}
-                  >
-                    {battleLog.length > 0 ? (
-                      <ul>
-                        {[...battleLog].reverse().map((enemy: { hash: string, name: string, description: string, imageUrl: string }, index) => (
-                          <li key={index} className="mb-2">
-                            <div className="enemy-info">
-                              <img src={enemy.imageUrl} alt={enemy.name} style={{ width: '64px', height: '64px' }} />
-                              {enemy.name}
-                              <button className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleSummonClickInBattleLog(enemy)}>Summon</button>
-                              <button
-                                id={`copyButton-${enemy.hash}`}
-                                className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm relative"
-                                onClick={() => handleCopyLinkClickInBattleLog(enemy, `copyButton-${enemy.hash}`)}
-                                onMouseLeave={() => hideTooltip(`copyButton-${enemy.hash}`)}>
-                                Copy Link
-                                <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
-                                  <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
-                                  Copied!
-                                </div>
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>No battles logged yet.</p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <button onClick={toggleBattleLogModal} className="mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <div>
+            <Modal
+              isOpen={isOpen_BattleLog}
+              onOpenChange={onOpenChange_BattleLog}
+              scrollBehavior="outside"
+              size="xl">
+              <ModalContent>
+                {(onClose) => (
+                  <>
+                    <ModalHeader className="flex flex-col gap-1">Battle Log</ModalHeader>
+                    <ModalBody>
+                      <div>
+                        <div className="text-sm text-gray-600 mb-4">
+                          Enemies encountered in battle by recency. Enemy links are shareable to the public.
+                        </div>
+                        <div
+                          className="battle-log-container overflow-y-auto max-h-[60vh] max-h-[60svh]"
+                          style={{ border: '1px solid #ccc', padding: '15px' }}
+                        >
+                          {battleLog.length > 0 ? (
+                            <ul>
+                              {[...battleLog].reverse().map((enemy: { hash: string, name: string, description: string, imageUrl: string }, index) => (
+                                <li key={index} className="mb-2">
+                                  <div className="enemy-info">
+                                    <img src={enemy.imageUrl} alt={enemy.name} style={{ width: '64px', height: '64px' }} />
+                                    {enemy.name}
+                                    <button className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleSummonClickInBattleLog(enemy)}>Summon</button>
+                                    <button
+                                      id={`copyButton-${enemy.hash}`}
+                                      className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm relative"
+                                      onClick={() => handleCopyLinkClickInBattleLog(enemy, `copyButton-${enemy.hash}`)}
+                                      onMouseLeave={() => hideTooltip(`copyButton-${enemy.hash}`)}>
+                                      Copy Link
+                                      <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
+                                        Copied!
+                                      </div>
+                                    </button>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>No battles logged yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    </ModalBody>
+                    <ModalFooter>
+                      <Button
+                        className="text-md mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        onPress={onClose}>
+                        Close
+                      </Button>
+                    </ModalFooter>
+                  </>
+                )}
+              </ModalContent>
+            </Modal>
+          </div>
 
           <audio
             ref={audioRef}
@@ -1234,50 +1237,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
             </>
           )}
-
-          <div>
-            Hello
-            <Button onPress={onOpen}>Open Modal</Button>
-            <Modal
-              isOpen={isOpen}
-              onOpenChange={onOpenChange}
-              scrollBehavior="outside"
-              size="lg">
-              <ModalContent>
-                {(onClose) => (
-                  <>
-                    <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
-                    <ModalBody>
-                      <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Nullam pulvinar risus non risus hendrerit venenatis.
-                        Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                      </p>
-                      <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Nullam pulvinar risus non risus hendrerit venenatis.
-                        Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                      </p>
-                      <p>
-                        Magna exercitation reprehenderit magna aute tempor cupidatat consequat elit
-                        dolor adipisicing. Mollit dolor eiusmod sunt ex incididunt cillum quis.
-                        Velit duis sit officia eiusmod Lorem aliqua enim laboris do dolor eiusmod.
-                        Et mollit incididunt nisi consectetur esse laborum eiusmod pariatur
-                        proident Lorem eiusmod et. Culpa deserunt nostrud ad veniam.
-                      </p>
-                    </ModalBody>
-                    <ModalFooter>
-                      <Button
-                        className="text-md mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                        onPress={onClose}>
-                        Close
-                      </Button>
-                    </ModalFooter>
-                  </>
-                )}
-              </ModalContent>
-            </Modal>
-          </div>
         </main>
       </NextUIProvider>
       <Analytics />
