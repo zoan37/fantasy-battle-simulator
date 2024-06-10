@@ -26,6 +26,13 @@ type Message = {
 
 // TODO: when returning home, if battle in progress, pop up modal confirming if want to exit
 
+// TODO: rethink enemy link, kinda confusing it redirects to home page.
+
+// TODO: fix battle log overflow / not scrolling correctly on mobile.
+// maybe it is time to use a modal framework
+
+// TODO: /enemy/[enemyId] page should show image thumbnail and enemy name, when sharing link
+
 export default function Home() {
   noStore();
   // TODO: break out streamed text area into its own component, and call noStore there
@@ -886,7 +893,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 </div>
                 <div className="mb-4 hidden">
                   <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
-                  <div 
+                  <div
                     className="enemy-prompt-history-container overflow-y-auto max-h-[70vh] max-h-[70svh]"
                     style={{ border: '1px solid #ccc', padding: '15px' }}>
                     {enemyPromptHistory.length > 0 ? (
@@ -1000,9 +1007,11 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               />
             </div>
 
-            <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
-              Enter Portal
-            </button>
+            <div>
+              <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
+                Enter Portal
+              </button>
+            </div>
 
             <div className="footer-padding">
             </div>
