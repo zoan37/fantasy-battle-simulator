@@ -76,7 +76,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   return (
     <>
       <main className="flex flex-col items-center p-5">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center mt-4">
           <Image
             src={enemy.imageUrl}
             alt="Dynamic Image"
