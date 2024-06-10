@@ -77,6 +77,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [battleLog, setBattleLog] = useState([]);
+  const [showPromptHistory, setShowPromptHistory] = useState(false);
 
   const { isOpen: isOpen_Settings, onOpen: onOpen_Settings, onOpenChange: onOpenChange_Settings } = useDisclosure();
   const { isOpen: isOpen_BattleLog, onOpen: onOpen_BattleLog, onOpenChange: onOpenChange_BattleLog } = useDisclosure();
@@ -196,25 +197,12 @@ export default function Home() {
     fetchEnemy();
   }, [enemyIdParam]);
 
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-    document.body.style.overflow = isModalOpen ? "auto" : "hidden";
-
-    // Ensure the entire modal is scrollable
-    /*
-    const modalContainer = document.querySelector('.modal-container') as HTMLElement;
-    if (modalContainer) {
-      modalContainer.style.overflow = isModalOpen ? 'hidden' : 'auto';
-      modalContainer.style.maxHeight = '100vh'; // Allows scrolling within the full view height
-    } else {
-      console.error("Modal container not found");
+  // Modify the onOpenChange handler for the battle log modal
+  const handleSettingsModalChange = (isOpen: boolean) => {
+    onOpenChange_Settings(); // Call the original handler to maintain other functionalities
+    if (!isOpen) {
+      setShowPromptHistory(false); // Set showPromptHistory to false when modal closes
     }
-    */
-  };
-
-  const toggleBattleLogModal = () => {
-    setIsBattleLogModalOpen(!isBattleLogModalOpen);
-    document.body.style.overflow = isBattleLogModalOpen ? "auto" : "hidden";
   };
 
   const handleStartClick = () => {
@@ -550,14 +538,16 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   };
 
   const storeEnemyPromptInHistory = (promptInfo: PromptInfo) => {
-    // TODO: implement
-    return;
-
     const storedPromptHistory = JSON.parse(localStorage.getItem('enemyPromptHistory') || '[]');
     storedPromptHistory.push(promptInfo);
     localStorage.setItem('enemyPromptHistory', JSON.stringify(storedPromptHistory));
 
     setEnemyPromptHistory(storedPromptHistory);
+  }
+
+  const clearEnemyPromptHistory = () => {
+    localStorage.setItem('enemyPromptHistory', '[]');
+    setEnemyPromptHistory([]);
   }
 
   const handleSummonClickInBattleLog = (enemy: Enemy) => {
@@ -874,7 +864,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
           <div>
             <Modal
               isOpen={isOpen_Settings}
-              onOpenChange={onOpenChange_Settings}
+              onOpenChange={handleSettingsModalChange}
               scrollBehavior="outside"
               size="xl">
               <ModalContent>
@@ -897,23 +887,40 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                           <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
                         </select>
                       </div>
-                      <div className="mb-4 hidden">
+                      <div className="mb-4">
                         <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
-                        <div
-                          className="enemy-prompt-history-container overflow-y-auto max-h-[70vh] max-h-[70svh]"
-                          style={{ border: '1px solid #ccc', padding: '15px' }}>
-                          {enemyPromptHistory.length > 0 ? (
-                            <ul>
-                              {[...enemyPromptHistory].reverse().map((promptInfo, index) => (
-                                <li key={index} className="mb-2">
-                                  {promptInfo.description}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p>No enemy prompt history yet.</p>
-                          )}
-                        </div>
+                        <button
+                          onClick={() => setShowPromptHistory(!showPromptHistory)}
+                          className="text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                        >
+                          {showPromptHistory ? 'Hide History' : 'Show History'}
+                        </button>
+                        {showPromptHistory && (
+                          <>
+                            <button
+                              onClick={clearEnemyPromptHistory}
+                              className="ml-2 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                            >
+                              Clear History
+                            </button>
+                            <div
+                              className="mt-3 enemy-prompt-history-container overflow-y-auto max-h-96"
+                              style={{ border: '1px solid #ccc', padding: '15px' }}
+                            >
+                              {enemyPromptHistory.length > 0 ? (
+                                <ul>
+                                  {[...enemyPromptHistory].reverse().map((promptInfo, index) => (
+                                    <li key={index} className="mb-2">
+                                      {promptInfo.description}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p></p>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
                       <hr className="mb-4" />
                       <div className="mb-4">
