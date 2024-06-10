@@ -84,7 +84,13 @@ export async function generateRandomEnemy() {
 export async function generateEnemyFromDescription(userDescription: string): Promise<{ name: string, description: string }> {
     userDescription = userDescription.trim();
 
-    const prompt = "Based on the user description for an enemy in a fantasy world, generate a name and description for the enemy. Provide 'Name:' and 'Description:' on separate lines. If the user provides a name for the enemy in the description, please use the name if it's not vulgar or bad language. Here is the user description:\n" + userDescription;
+    const prompt = `
+Based on the user's request for an enemy in a fantasy world, generate a name and description for the enemy. 
+If the user's request already asks for a specific name with language like "named", "called", etc., please use that name in your response (assuming it's not vulgar or bad language).
+Even if the user's request is too short or not enough, still return something.
+Provide 'Name:' and 'Description:' on separate lines.
+
+Here is the user's request:\n`.trim() + userDescription;
 
     try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -114,6 +120,9 @@ export async function generateEnemyFromDescription(userDescription: string): Pro
         }
 
         const messageContent = data.choices[0].message.content;
+
+        console.log("Generated enemy response:");
+        console.log(messageContent);
 
         return parseEnemyResponseContent(messageContent);
     } catch (error) {
