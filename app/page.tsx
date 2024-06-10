@@ -26,16 +26,7 @@ type Message = {
   content: string;
 };
 
-// TODO: store recent prompt history (e.g. really good prompt you want to save)
-
-// TODO: when returning home, if battle in progress, pop up modal confirming if want to exit
-
-// TODO: rethink enemy link, kinda confusing it redirects to home page.
-
-// TODO: fix battle log overflow / not scrolling correctly on mobile.
-// maybe it is time to use a modal framework
-
-// TODO: /enemy/[enemyId] page should show image thumbnail and enemy name, when sharing link
+// TODO: [Consider] when returning home, if battle in progress, pop up modal confirming if want to exit
 
 export default function Home() {
   noStore();
