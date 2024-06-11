@@ -30,13 +30,7 @@ type Message = {
   content: string;
 };
 
-// TODO: use nextui select component for selecting battle theme
-
-// TODO: make custom enemy and custom enemy action inputs autoexpanding, to allow user to see more text
-
 // TODO: [Consider] when returning home, if battle in progress, pop up modal confirming if want to exit
-
-// TODO: [Consider] make buttons have rounder edges to match NextUI textarea border look
 
 export default function Home() {
   noStore();
