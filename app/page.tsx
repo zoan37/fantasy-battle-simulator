@@ -26,6 +26,8 @@ type Message = {
   content: string;
 };
 
+// TODO: make custom enemy and custom enemy action inputs autoexpanding, to allow user to see more text
+
 // TODO: [Consider] when returning home, if battle in progress, pop up modal confirming if want to exit
 
 export default function Home() {
@@ -85,6 +87,8 @@ export default function Home() {
   const TRIUMPH_OF_LEGENDS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Triumph%20of%20Legends-HrF2MfygLBNMWgvdTI5tW8EP48KkWK.mp3';
   const CLASH_OF_TITANS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Clash%20of%20Titans-gwhdW9DtathcRSPseOINlRULvLzCs1.mp3';
   const VICTORY_RISE_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Victory%20Rise-qugw4036xCy6cdPDnu9MDErI8Vbfmx.mp3';
+  const RISE_OF_THE_HEROES_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Rise%20of%20the%20Heroes-EJnpxYdTIYS2j26DWl4qOHCwH2OMAd.mp3';
+  const DRAGONS_CALL_BATTLE_THEME = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Dragon's%20Call%20(trimmed)-LD4aNasJkFpg6dNY00LVRwyFNDm8aO.mp3";
   const [defaultBattleTheme, setDefaultBattleTheme] = useState(() => Cookies.get('defaultBattleTheme') || EPIC_CONFRONTATION_BATTLE_THEME);
 
   useEffect(() => {
@@ -876,6 +880,8 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                           <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
                           <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
                           <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
+                          <option value={RISE_OF_THE_HEROES_BATTLE_THEME}>Rise of the Heroes</option>
+                          <option value={DRAGONS_CALL_BATTLE_THEME}>Dragon's Call</option>
                         </select>
                       </div>
                       <div className="mb-4">
