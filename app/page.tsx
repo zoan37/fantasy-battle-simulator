@@ -1064,18 +1064,24 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                     }
                   }}
                 />
-                <button
+                <Button
+                  isDisabled={isLoading}
                   type="submit"
-                  className="ml-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
-                  disabled={isLoading}>
+                  color="primary"
+                  className="ml-1"
+                  style={{ fontSize: '1rem' }}>
                   Battle!
-                </button>
+                </Button>
               </form>
 
-              <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
-                disabled={isLoading}>
+              <Button
+                onClick={fetchOpenRouterResponse}
+                isDisabled={isLoading}
+                color="primary"
+                className="ml-1 mb-4"
+                style={{ fontSize: '1rem' }}>
                 Battle Random Enemy
-              </button>
+              </Button>
 
               {isLoading && (
                 <div className="flex justify-center items-center">
@@ -1148,15 +1154,27 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
 
               <div className="flex justify-center mt-4 mb-4">
-                <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                <Button
+                  onClick={(e) => handleActionButtonClick(e, "1")}
+                  color="primary"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   1
-                </button>
-                <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                </Button>
+                <Button
+                  onClick={(e) => handleActionButtonClick(e, "2")}
+                  color="primary"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   2
-                </button>
-                <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                </Button>
+                <Button
+                  onClick={(e) => handleActionButtonClick(e, "3")}
+                  color="primary"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   3
-                </button>
+                </Button>
               </div>
 
               <form onSubmit={handleActionSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
@@ -1175,13 +1193,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                     }
                   }}
                 />
-                <button
+                <Button
                   type="submit"
-                  className="ml-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
+                  color="primary"
+                  className="ml-1"
                   disabled={isLoading}
-                >
+                  style={{ fontSize: '1rem' }}>
                   Go
-                </button>
+                </Button>
               </form>
 
               {isBattleOver && (
