@@ -13,9 +13,10 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { useSearchParams } from 'next/navigation';
 
 import React from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Link, useDisclosure } from "@nextui-org/react";
 import { NextUIProvider } from "@nextui-org/react";
 import { Textarea } from "@nextui-org/input";
+import { Select, SelectSection, SelectItem } from "@nextui-org/select";
 
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -873,20 +874,25 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                       </div>
                       <div className="mb-4">
                         <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
-                        <button
+                        <Button
                           onClick={() => setShowPromptHistory(!showPromptHistory)}
-                          className="text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                          size="sm"
+                          color="primary"
+                          style={{ fontSize: '0.875rem' }}
                         >
                           {showPromptHistory ? 'Hide History' : 'Show History'}
-                        </button>
+                        </Button>
                         {showPromptHistory && (
                           <>
-                            <button
+                            <Button
                               onClick={clearEnemyPromptHistory}
-                              className="ml-2 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                              size="sm"
+                              color="danger"
+                              className="ml-2"
+                              style={{ fontSize: '0.875rem' }}
                             >
                               Clear History
-                            </button>
+                            </Button>
                             <div
                               className="mt-3 enemy-prompt-history-container overflow-y-auto max-h-96"
                               style={{ border: '1px solid #ccc', padding: '15px' }}
@@ -915,13 +921,15 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                         The battle log records the enemies you've encountered. Share an enemy with a link.
                       </div>
                       <div className="mb-0">
-                        Made by <a href="https://x.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
+                        Made by <Link href="https://x.com/zoan37" target="_blank">@zoan37</Link>.
                       </div>
                     </ModalBody>
                     <ModalFooter>
                       <Button
-                        className="text-md mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                        onPress={onClose}>
+                        onPress={onClose}
+                        color="default"
+                        style={{ fontSize: '1rem' }}
+                      >
                         Close
                       </Button>
                     </ModalFooter>
@@ -957,18 +965,24 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                                   <div className="enemy-info">
                                     <img src={enemy.imageUrl} alt={enemy.name} style={{ width: '64px', height: '64px' }} />
                                     {enemy.name}
-                                    <button className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleSummonClickInBattleLog(enemy)}>Summon</button>
-                                    <button
-                                      id={`copyButton-${enemy.hash}`}
-                                      className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm relative"
+                                    <Button
+                                      onClick={() => handleSummonClickInBattleLog(enemy)}
+                                      size="sm"
+                                      color="primary"
+                                      className="ml-2"
+                                      style={{ fontSize: '0.875rem' }}
+                                    >
+                                      Summon
+                                    </Button>
+                                    <Button
                                       onClick={() => handleCopyLinkClickInBattleLog(enemy, `copyButton-${enemy.hash}`)}
-                                      onMouseLeave={() => hideTooltip(`copyButton-${enemy.hash}`)}>
+                                      size="sm"
+                                      color="default"
+                                      className="ml-2"
+                                      style={{ fontSize: '0.875rem' }}
+                                    >
                                       Copy Link
-                                      <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
-                                        <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
-                                        Copied!
-                                      </div>
-                                    </button>
+                                    </Button>
                                   </div>
                                 </li>
                               ))}
@@ -981,8 +995,10 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                     </ModalBody>
                     <ModalFooter>
                       <Button
-                        className="text-md mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                        onPress={onClose}>
+                        onPress={onClose}
+                        color="default"
+                        style={{ fontSize: '1rem' }}
+                      >
                         Close
                       </Button>
                     </ModalFooter>
