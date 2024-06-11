@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { getEnemy } from "../../llm";
 import Image from 'next/image';
 import type { Metadata, ResolvingMetadata } from 'next';
 import SummonButton from './summon';
+import { NextUIProvider } from "@nextui-org/react";
 
 interface Enemy {
   hash: string;
@@ -40,7 +40,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   // read route params
   const id = params.id
- 
+
   // fetch data
   const enemy = await fetchEnemy(id);
 
@@ -49,7 +49,7 @@ export async function generateMetadata(
       title: 'Enemy Not Found - Fantasy Battle Simulator'
     }
   }
- 
+
   return {
     title: `${enemy.name} - Fantasy Battle Simulator`,
     openGraph: {
@@ -75,32 +75,34 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return (
     <>
-      <main className="flex flex-col items-center p-5">
-        <div className="flex flex-col items-center mt-4">
-          <Image
-            src={enemy.imageUrl}
-            alt="Dynamic Image"
-            width={420}
-            height={420}
-            priority
-          />
+      <NextUIProvider>
+        <main className="flex flex-col items-center p-5">
+          <div className="flex flex-col items-center mt-4">
+            <Image
+              src={enemy.imageUrl}
+              alt="Dynamic Image"
+              width={420}
+              height={420}
+              priority
+            />
 
-          <div className="text-lg font-bold mt-4">
-            {enemy.name}
-          </div>
+            <div className="text-lg font-bold mt-4">
+              {enemy.name}
+            </div>
 
-          <div className="text-md mt-2">
-            {enemy.description}
-          </div>
+            <div className="text-md mt-2">
+              {enemy.description}
+            </div>
 
-          <div className="mt-4">
-            <SummonButton enemyHash={enemy.hash} />
-          </div>
+            <div className="mt-4">
+              <SummonButton enemyHash={enemy.hash} />
+            </div>
 
-          <div className="footer-padding">
+            <div className="footer-padding">
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </NextUIProvider>
       <Analytics />
     </>
   );

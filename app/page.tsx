@@ -695,15 +695,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     }
   };
 
-  const fetchImage = async (descriptionPrompt: string) => {
-    const result = await generateImage(descriptionPrompt);
-
-    console.log('Setting image');
-    console.log(result.imageUrl);
-
-    setImageUrl(result.imageUrl);
-  };
-
   async function getChatResponseStream(
     messages: Message[]
   ) {
@@ -1043,9 +1034,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
 
               <div>
-                <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
+                <Button
+                  onClick={handleStartClick}
+                  color="success"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}
+                >
                   Enter Portal
-                </button>
+                </Button>
               </div>
 
               <div className="footer-padding">
