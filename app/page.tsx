@@ -861,6 +861,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                           id="battleTheme"
                           selectedKeys={[defaultBattleTheme]}
                           onChange={(e) => changeBattleTheme(e.target.value)}
+                          aria-label="Default Battle Theme"
                         >
                           <SelectItem key={EPIC_CONFRONTATION_BATTLE_THEME}>
                             Epic Confrontation
