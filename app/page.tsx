@@ -855,22 +855,35 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   <>
                     <ModalHeader className="flex flex-col gap-1">Settings</ModalHeader>
                     <ModalBody>
-                      <div>
+                      <div className="mb-2">
                         <label htmlFor="battleTheme" className="block mb-2 text-sm font-medium text-gray-900">Default Battle Theme:</label>
-                        <select
+                        <Select
                           id="battleTheme"
-                          value={defaultBattleTheme}
+                          selectedKeys={[defaultBattleTheme]}
                           onChange={(e) => changeBattleTheme(e.target.value)}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                         >
-                          <option value={EPIC_CONFRONTATION_BATTLE_THEME}>Epic Confrontation</option>
-                          <option value={INTO_THE_FLAMES_BATTLE_THEME}>Into the Flames</option>
-                          <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
-                          <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
-                          <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
-                          <option value={RISE_OF_THE_HEROES_BATTLE_THEME}>Rise of the Heroes</option>
-                          <option value={DRAGONS_CALL_BATTLE_THEME}>Dragon's Call</option>
-                        </select>
+                          <SelectItem key={EPIC_CONFRONTATION_BATTLE_THEME}>
+                            Epic Confrontation
+                          </SelectItem>
+                          <SelectItem key={INTO_THE_FLAMES_BATTLE_THEME}>
+                            Into the Flames
+                          </SelectItem>
+                          <SelectItem key={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>
+                            Triumph of Legends
+                          </SelectItem>
+                          <SelectItem key={CLASH_OF_TITANS_BATTLE_THEME}>
+                            Clash of Titans
+                          </SelectItem>
+                          <SelectItem key={VICTORY_RISE_BATTLE_THEME}>
+                            Victory Rise
+                          </SelectItem>
+                          <SelectItem key={RISE_OF_THE_HEROES_BATTLE_THEME}>
+                            Rise of the Heroes
+                          </SelectItem>
+                          <SelectItem key={DRAGONS_CALL_BATTLE_THEME}>
+                            Dragon's Call
+                          </SelectItem>
+                        </Select>
                       </div>
                       <div className="mb-4">
                         <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
