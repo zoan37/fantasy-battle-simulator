@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import React from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from "@nextui-org/react";
 import { NextUIProvider } from "@nextui-org/react";
+import { Textarea } from "@nextui-org/input";
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -29,6 +30,8 @@ type Message = {
 // TODO: make custom enemy and custom enemy action inputs autoexpanding, to allow user to see more text
 
 // TODO: [Consider] when returning home, if battle in progress, pop up modal confirming if want to exit
+
+// TODO: [Consider] make buttons have rounder edges to match NextUI textarea border look
 
 export default function Home() {
   noStore();
@@ -49,9 +52,6 @@ export default function Home() {
 
   // Add a new useState for isAudioMuted
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBattleLogModalOpen, setIsBattleLogModalOpen] = useState(false);
 
   const [imageUrl, setImageUrl] = useState('');
   const [enemyHash, setEnemyHash] = useState('');
@@ -1049,17 +1049,23 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
               <p className="text-center text-lg mb-4">You are the Hero, blessed with an overpowered magic system called Echo, in a fantasy world. Battle enemies to your heart's content!</p>
               <form onSubmit={handleFormSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
-                <input
-                  type="text"
+                <Textarea
+                  isDisabled={isLoading}
+                  minRows={1}
                   value={userInput}
                   onChange={handleInputChange}
                   placeholder="Describe an enemy..."
-                  className="text-black p-2 rounded border border-gray-300 mr-1 flex-grow disabled:opacity-50 w-full"
-                  disabled={isLoading}
+                  style={{ fontSize: '1rem' }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault(); // Prevent the default action to avoid newline in textarea
+                      handleFormSubmit(event as any); // Cast to any to match form event type
+                    }
+                  }}
                 />
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
+                  className="ml-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
                   disabled={isLoading}>
                   Battle!
                 </button>
