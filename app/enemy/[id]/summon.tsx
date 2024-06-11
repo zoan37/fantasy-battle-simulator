@@ -1,24 +1,28 @@
 'use client'
 
 import React from 'react';
+import { Button } from "@nextui-org/react";
 
 interface SummonButtonProps {
-  enemyHash: string;
+    enemyHash: string;
 }
 
 const SummonButton: React.FC<SummonButtonProps> = ({ enemyHash }) => {
-  const handleSummonClick = () => {
-    window.location.href = `/?enemy=${enemyHash}`;
-  };
+    const handleSummonClick = () => {
+        window.location.href = `/?enemy=${enemyHash}`;
+    };
 
-  return (
-    <button
-      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4"
-      onClick={handleSummonClick}
-    >
-      Summon in Simulator
-    </button>
-  );
+    return (
+        <>
+            <Button
+                onClick={handleSummonClick}
+                color="success"
+                style={{ fontSize: '1rem' }}
+            >
+                Summon in Simulator
+            </Button>
+        </>
+    );
 };
 
 export default SummonButton;

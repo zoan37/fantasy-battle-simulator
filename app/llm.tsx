@@ -43,7 +43,7 @@ const parseEnemyResponseContent = (messageContent: string) => {
  * Generate a random enemy using OpenRouter.
  * @returns {Promise<{name: string, description: string}>} The name and description of the generated enemy.
  */
-export async function generateRandomEnemy() {
+async function generateRandomEnemy() {
     const prompt = "Generate a random enemy in a fantasy world. No spiders or arachnids as they are too scary. Provide 'Name:' and 'Description:' on separate lines.";
 
     try {
@@ -81,7 +81,7 @@ export async function generateRandomEnemy() {
  * @param userDescription {string} User provided description of an enemy.
  * @returns {Promise<{name: string, description: string}>} The name and description of the generated enemy.
  */
-export async function generateEnemyFromDescription(userDescription: string): Promise<{ name: string, description: string }> {
+async function generateEnemyFromDescription(userDescription: string): Promise<{ name: string, description: string }> {
     userDescription = userDescription.trim();
 
     const prompt = `

@@ -7,14 +7,18 @@ import Markdown from 'react-markdown';
 import { Analytics } from '@vercel/analytics/react';
 import Cookies from 'js-cookie';
 import { generateImage } from './image';
-import { generateRandomEnemy, generateEnemyFromDescription, getBattleChatResponseStream, createEnemy, getEnemy } from "./llm";
+import { getBattleChatResponseStream, createEnemy, getEnemy } from "./llm";
 import { readStreamableValue } from 'ai/rsc';
 import { unstable_noStore as noStore } from 'next/cache';
 import { useSearchParams } from 'next/navigation';
 
 import React from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Link, useDisclosure } from "@nextui-org/react";
 import { NextUIProvider } from "@nextui-org/react";
+import { Textarea } from "@nextui-org/input";
+import { Select, SelectSection, SelectItem } from "@nextui-org/select";
+
+import toast, { Toaster } from 'react-hot-toast';
 
 fal.config({
   // Can also be auto-configured using environment variables:
@@ -47,9 +51,6 @@ export default function Home() {
 
   // Add a new useState for isAudioMuted
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBattleLogModalOpen, setIsBattleLogModalOpen] = useState(false);
 
   const [imageUrl, setImageUrl] = useState('');
   const [enemyHash, setEnemyHash] = useState('');
@@ -85,6 +86,8 @@ export default function Home() {
   const TRIUMPH_OF_LEGENDS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Triumph%20of%20Legends-HrF2MfygLBNMWgvdTI5tW8EP48KkWK.mp3';
   const CLASH_OF_TITANS_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Clash%20of%20Titans-gwhdW9DtathcRSPseOINlRULvLzCs1.mp3';
   const VICTORY_RISE_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Victory%20Rise-qugw4036xCy6cdPDnu9MDErI8Vbfmx.mp3';
+  const RISE_OF_THE_HEROES_BATTLE_THEME = 'https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Rise%20of%20the%20Heroes-EJnpxYdTIYS2j26DWl4qOHCwH2OMAd.mp3';
+  const DRAGONS_CALL_BATTLE_THEME = "https://os2iyupv2jtrdzz9.public.blob.vercel-storage.com/Dragon's%20Call%20(trimmed)-LD4aNasJkFpg6dNY00LVRwyFNDm8aO.mp3";
   const [defaultBattleTheme, setDefaultBattleTheme] = useState(() => Cookies.get('defaultBattleTheme') || EPIC_CONFRONTATION_BATTLE_THEME);
 
   useEffect(() => {
@@ -585,32 +588,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
     });
   };
 
-  let copyButtonTimeouts: { [buttonId: string]: NodeJS.Timeout } = {};
-
   function showTooltip(buttonId: string) {
     console.log('showTooltip for buttonId:', buttonId);
 
-    const button = document.getElementById(buttonId)!;
-    let tooltip = button.querySelector('.tooltip')!;
-    tooltip.classList.remove('hidden');
-
-    if (copyButtonTimeouts[buttonId]) {
-      clearTimeout(copyButtonTimeouts[buttonId]);
-    }
-
-    copyButtonTimeouts[buttonId] = setTimeout(() => {
-      tooltip.classList.add('hidden');
-    }, 2000); // Hide tooltip after 2 seconds
+    toast.success('Copied enemy link to clipboard');
   }
 
   const hideTooltip = (buttonId: string) => {
-    const button = document.getElementById(buttonId)!;
-    const tooltip = button.querySelector('.tooltip')!;
-    tooltip.classList.add('hidden');
-
-    if (copyButtonTimeouts[buttonId]) {
-      clearTimeout(copyButtonTimeouts[buttonId]);
-    }
+    return;
   }
 
   const fetchOpenRouterResponseWithInput = async (input: string) => {
@@ -702,15 +687,6 @@ A battle may be over, but never end the simulation; the user is allowed to conti
 
       setIsLoading(false); // Hide spinner
     }
-  };
-
-  const fetchImage = async (descriptionPrompt: string) => {
-    const result = await generateImage(descriptionPrompt);
-
-    console.log('Setting image');
-    console.log(result.imageUrl);
-
-    setImageUrl(result.imageUrl);
   };
 
   async function getChatResponseStream(
@@ -825,21 +801,22 @@ A battle may be over, but never end the simulation; the user is allowed to conti
   return (
     <>
       <NextUIProvider>
-        <main className="flex flex-col items-center p-5">
-          <h1 className="text-3xl font-bold text-center mt-4 mb-4">Fantasy Battle Simulator</h1>
-          <div className="flex justify-center space-x-2 mb-4">
-            <button className="p-1" onClick={onOpen_Settings}>
+        <Toaster />
+        <main className="light flex flex-col items-center p-5">
+          <h1 className="text-3xl font-bold text-center mt-4 mb-3">Fantasy Battle Simulator</h1>
+          <div className="flex justify-center space-x-2 mb-3">
+            <button className="p-2" onClick={onOpen_Settings}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-7">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
               </svg>
             </button>
-            <button className="p-1" onClick={onOpen_BattleLog}>
+            <button className="p-2" onClick={onOpen_BattleLog}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-7">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
               </svg>
             </button>
-            <button className="p-1" onClick={() => setIsAudioMuted(!isAudioMuted)}>
+            <button className="p-2" onClick={() => setIsAudioMuted(!isAudioMuted)}>
               {!isAudioMuted ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-7">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
@@ -863,37 +840,58 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   <>
                     <ModalHeader className="flex flex-col gap-1">Settings</ModalHeader>
                     <ModalBody>
-                      <div>
+                      <div className="mb-2">
                         <label htmlFor="battleTheme" className="block mb-2 text-sm font-medium text-gray-900">Default Battle Theme:</label>
-                        <select
+                        <Select
                           id="battleTheme"
-                          value={defaultBattleTheme}
+                          selectedKeys={[defaultBattleTheme]}
                           onChange={(e) => changeBattleTheme(e.target.value)}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                          aria-label="Default Battle Theme"
                         >
-                          <option value={EPIC_CONFRONTATION_BATTLE_THEME}>Epic Confrontation</option>
-                          <option value={INTO_THE_FLAMES_BATTLE_THEME}>Into the Flames</option>
-                          <option value={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>Triumph of Legends</option>
-                          <option value={CLASH_OF_TITANS_BATTLE_THEME}>Clash of Titans</option>
-                          <option value={VICTORY_RISE_BATTLE_THEME}>Victory Rise</option>
-                        </select>
+                          <SelectItem key={EPIC_CONFRONTATION_BATTLE_THEME}>
+                            Epic Confrontation
+                          </SelectItem>
+                          <SelectItem key={INTO_THE_FLAMES_BATTLE_THEME}>
+                            Into the Flames
+                          </SelectItem>
+                          <SelectItem key={TRIUMPH_OF_LEGENDS_BATTLE_THEME}>
+                            Triumph of Legends
+                          </SelectItem>
+                          <SelectItem key={CLASH_OF_TITANS_BATTLE_THEME}>
+                            Clash of Titans
+                          </SelectItem>
+                          <SelectItem key={VICTORY_RISE_BATTLE_THEME}>
+                            Victory Rise
+                          </SelectItem>
+                          <SelectItem key={RISE_OF_THE_HEROES_BATTLE_THEME}>
+                            Rise of the Heroes
+                          </SelectItem>
+                          <SelectItem key={DRAGONS_CALL_BATTLE_THEME}>
+                            Dragon's Call
+                          </SelectItem>
+                        </Select>
                       </div>
                       <div className="mb-4">
                         <label className="block mb-2 text-sm font-medium text-gray-900">Enemy Prompt History:</label>
-                        <button
+                        <Button
                           onClick={() => setShowPromptHistory(!showPromptHistory)}
-                          className="text-sm bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                          size="sm"
+                          color="primary"
+                          style={{ fontSize: '0.875rem' }}
                         >
                           {showPromptHistory ? 'Hide History' : 'Show History'}
-                        </button>
+                        </Button>
                         {showPromptHistory && (
                           <>
-                            <button
+                            <Button
                               onClick={clearEnemyPromptHistory}
-                              className="ml-2 text-sm bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                              size="sm"
+                              color="danger"
+                              className="ml-2"
+                              style={{ fontSize: '0.875rem' }}
                             >
                               Clear History
-                            </button>
+                            </Button>
                             <div
                               className="mt-3 enemy-prompt-history-container overflow-y-auto max-h-96"
                               style={{ border: '1px solid #ccc', padding: '15px' }}
@@ -922,13 +920,15 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                         The battle log records the enemies you've encountered. Share an enemy with a link.
                       </div>
                       <div className="mb-0">
-                        Made by <a href="https://x.com/zoan37" target="_blank" className="text-blue-500 hover:text-blue-700">@zoan37</a>.
+                        Made by <Link href="https://x.com/zoan37" target="_blank">@zoan37</Link>.
                       </div>
                     </ModalBody>
                     <ModalFooter>
                       <Button
-                        className="text-md mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                        onPress={onClose}>
+                        onPress={onClose}
+                        color="default"
+                        style={{ fontSize: '1rem' }}
+                      >
                         Close
                       </Button>
                     </ModalFooter>
@@ -964,18 +964,24 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                                   <div className="enemy-info">
                                     <img src={enemy.imageUrl} alt={enemy.name} style={{ width: '64px', height: '64px' }} />
                                     {enemy.name}
-                                    <button className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm" onClick={() => handleSummonClickInBattleLog(enemy)}>Summon</button>
-                                    <button
-                                      id={`copyButton-${enemy.hash}`}
-                                      className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-sm relative"
+                                    <Button
+                                      onClick={() => handleSummonClickInBattleLog(enemy)}
+                                      size="sm"
+                                      color="primary"
+                                      className="ml-2"
+                                      style={{ fontSize: '0.875rem' }}
+                                    >
+                                      Summon
+                                    </Button>
+                                    <Button
                                       onClick={() => handleCopyLinkClickInBattleLog(enemy, `copyButton-${enemy.hash}`)}
-                                      onMouseLeave={() => hideTooltip(`copyButton-${enemy.hash}`)}>
+                                      size="sm"
+                                      color="default"
+                                      className="ml-2"
+                                      style={{ fontSize: '0.875rem' }}
+                                    >
                                       Copy Link
-                                      <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
-                                        <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
-                                        Copied!
-                                      </div>
-                                    </button>
+                                    </Button>
                                   </div>
                                 </li>
                               ))}
@@ -988,8 +994,10 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                     </ModalBody>
                     <ModalFooter>
                       <Button
-                        className="text-md mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                        onPress={onClose}>
+                        onPress={onClose}
+                        color="default"
+                        style={{ fontSize: '1rem' }}
+                      >
                         Close
                       </Button>
                     </ModalFooter>
@@ -1020,9 +1028,14 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
 
               <div>
-                <button onClick={handleStartClick} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
+                <Button
+                  onClick={handleStartClick}
+                  color="success"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}
+                >
                   Enter Portal
-                </button>
+                </Button>
               </div>
 
               <div className="footer-padding">
@@ -1043,26 +1056,39 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
               <p className="text-center text-lg mb-4">You are the Hero, blessed with an overpowered magic system called Echo, in a fantasy world. Battle enemies to your heart's content!</p>
               <form onSubmit={handleFormSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
-                <input
-                  type="text"
+                <Textarea
+                  isDisabled={isLoading}
+                  minRows={1}
+                  maxRows={5}
                   value={userInput}
                   onChange={handleInputChange}
                   placeholder="Describe an enemy..."
-                  className="text-black p-2 rounded border border-gray-300 mr-1 flex-grow disabled:opacity-50 w-full"
-                  disabled={isLoading}
+                  style={{ fontSize: '1rem' }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault(); // Prevent the default action to avoid newline in textarea
+                      handleFormSubmit(event as any); // Cast to any to match form event type
+                    }
+                  }}
                 />
-                <button
+                <Button
+                  isDisabled={isLoading}
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
-                  disabled={isLoading}>
+                  color="primary"
+                  className="ml-1"
+                  style={{ fontSize: '1rem' }}>
                   Battle!
-                </button>
+                </Button>
               </form>
 
-              <button onClick={fetchOpenRouterResponse} className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
-                disabled={isLoading}>
+              <Button
+                onClick={fetchOpenRouterResponse}
+                isDisabled={isLoading}
+                color="primary"
+                className="ml-1 mt-1 mb-4"
+                style={{ fontSize: '1rem' }}>
                 Battle Random Enemy
-              </button>
+              </Button>
 
               {isLoading && (
                 <div className="flex justify-center items-center">
@@ -1084,20 +1110,26 @@ A battle may be over, but never end the simulation; the user is allowed to conti
           {(showBattle || showEnemyPreview) && (
             <>
               <div className="flex justify-center mb-5">
-                <button onClick={exitBattle} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1">
+                <Button
+                  onClick={exitBattle}
+                  color="default"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   Return Home
-                </button>
-                <button
+                </Button>
+
+                <Button
                   id="copyButton"
                   onClick={() => { handleBattlePreviewCopyEnemyLink(); }}
                   onMouseLeave={() => hideTooltip('copyButton')}
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded m-1 relative">
+                  className="m-1"
+                  style={{ fontSize: '1rem', position: 'relative' }}>
                   Copy Enemy Link
                   <div className="tooltip hidden absolute bottom-full mb-2 px-3 py-1 text-sm text-white bg-black rounded" style={{ left: '50%', transform: 'translateX(-50%)' }}>
                     <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 rotate-45 w-3 h-3 bg-black"></div>
                     Copied!
                   </div>
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -1135,40 +1167,64 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
 
               <div className="flex justify-center mt-4 mb-4">
-                <button onClick={(e) => handleActionButtonClick(e, "1")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                <Button
+                  onClick={(e) => handleActionButtonClick(e, "1")}
+                  color="primary"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   1
-                </button>
-                <button onClick={(e) => handleActionButtonClick(e, "2")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                </Button>
+                <Button
+                  onClick={(e) => handleActionButtonClick(e, "2")}
+                  color="primary"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   2
-                </button>
-                <button onClick={(e) => handleActionButtonClick(e, "3")} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-1">
+                </Button>
+                <Button
+                  onClick={(e) => handleActionButtonClick(e, "3")}
+                  color="primary"
+                  className="m-1"
+                  style={{ fontSize: '1rem' }}>
                   3
-                </button>
+                </Button>
               </div>
 
               <form onSubmit={handleActionSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
-                <input
-                  type="text"
+                <Textarea
+                  isDisabled={isLoading}
+                  minRows={1}
+                  maxRows={5}
                   value={userAction}
                   onChange={handleActionInputChange}
                   placeholder="Custom action..."
-                  className="text-black p-2 rounded border border-gray-300 mr-1 flex-grow disabled:opacity-50 w-full"
-                  disabled={isLoading}
+                  style={{ fontSize: '1rem' }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault(); // Prevent the default action to avoid newline in textarea
+                      handleActionSubmit(event as any); // Cast to any to match form event type
+                    }
+                  }}
                 />
-                <button
+                <Button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
+                  color="primary"
+                  className="ml-1"
                   disabled={isLoading}
-                >
+                  style={{ fontSize: '1rem' }}>
                   Go
-                </button>
+                </Button>
               </form>
 
               {isBattleOver && (
                 <div className="mb-4">
-                  <button onClick={exitBattle} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded m-1">
+                  <Button
+                    onClick={exitBattle}
+                    color="danger"
+                    className="m-1"
+                    style={{ fontSize: '1rem' }}>
                     Exit Battle
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -1224,9 +1280,13 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                   )}
 
                   <div className="mt-4">
-                    <button onClick={startEnemyPreviewBattle} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-1 mb-4">
+                    <Button
+                      onClick={startEnemyPreviewBattle}
+                      color="primary"
+                      className="mt-1 mb-4"
+                      style={{ fontSize: '1rem' }}>
                       Start Battle
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}
