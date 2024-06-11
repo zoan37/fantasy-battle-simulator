@@ -1052,6 +1052,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 <Textarea
                   isDisabled={isLoading}
                   minRows={1}
+                  maxRows={5}
                   value={userInput}
                   onChange={handleInputChange}
                   placeholder="Describe an enemy..."
@@ -1159,17 +1160,24 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               </div>
 
               <form onSubmit={handleActionSubmit} className="mb-4 flex items-center" style={{ maxWidth: '25rem', width: '100%' }}>
-                <input
-                  type="text"
+                <Textarea
+                  isDisabled={isLoading}
+                  minRows={1}
+                  maxRows={5}
                   value={userAction}
                   onChange={handleActionInputChange}
                   placeholder="Custom action..."
-                  className="text-black p-2 rounded border border-gray-300 mr-1 flex-grow disabled:opacity-50 w-full"
-                  disabled={isLoading}
+                  style={{ fontSize: '1rem' }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault(); // Prevent the default action to avoid newline in textarea
+                      handleActionSubmit(event as any); // Cast to any to match form event type
+                    }
+                  }}
                 />
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
+                  className="ml-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 hover:disabled:bg-blue-500"
                   disabled={isLoading}
                 >
                   Go
