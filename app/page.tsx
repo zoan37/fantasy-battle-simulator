@@ -920,6 +920,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                         The battle log records the enemies you've encountered. Share an enemy with a link.
                       </div>
                       <div className="mb-0">
+                        <Link href="https://github.com/zoan37/fantasy-battle-simulator" target="_blank">Source code on GitHub</Link>.
                         Made by <Link href="https://x.com/zoan37" target="_blank">@zoan37</Link>.
                       </div>
                     </ModalBody>
