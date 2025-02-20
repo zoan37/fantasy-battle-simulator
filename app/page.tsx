@@ -231,9 +231,9 @@ export default function Home() {
   };
 
   // Function to handle specific action button clicks
-  const handleActionButtonClick = (e: React.MouseEvent<HTMLButtonElement>, action: string) => {
-    e.preventDefault(); // Prevent default button click behavior
-    handleBattleTurnChatResponse(action); // Then submit the form
+  const handleActionButtonClick = (e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>, action: string) => {
+    e.preventDefault();
+    handleBattleTurnChatResponse(action);
   };
 
   function fadeOutAndChangeMusic(newSrc: string, fadeOutDuration: number = 500) {
@@ -1170,6 +1170,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
               <div className="flex justify-center mt-4 mb-4">
                 <Button
                   onClick={(e) => handleActionButtonClick(e, "1")}
+                  onTouchEnd={(e) => handleActionButtonClick(e, "1")}
                   color="primary"
                   className="m-1"
                   style={{ fontSize: '1rem' }}>
@@ -1177,6 +1178,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 </Button>
                 <Button
                   onClick={(e) => handleActionButtonClick(e, "2")}
+                  onTouchEnd={(e) => handleActionButtonClick(e, "2")}
                   color="primary"
                   className="m-1"
                   style={{ fontSize: '1rem' }}>
@@ -1184,6 +1186,7 @@ A battle may be over, but never end the simulation; the user is allowed to conti
                 </Button>
                 <Button
                   onClick={(e) => handleActionButtonClick(e, "3")}
+                  onTouchEnd={(e) => handleActionButtonClick(e, "3")}
                   color="primary"
                   className="m-1"
                   style={{ fontSize: '1rem' }}>
